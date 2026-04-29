@@ -1,4 +1,4 @@
 
 # MrView
 
-![logo](./Assets/logo.png)
+![logo](./assets/logo.png)
