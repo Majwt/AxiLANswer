@@ -1,4 +1,4 @@
 
 # MrView
 
-![logo](./frontend/public/favicon.svg)
+![logo](./Assets/logo.png)
