@@ -1,11 +1,15 @@
 import './App.css'
-import GraphView from './GraphView'
+import GraphView from './components/GraphView'
+import brand from "./config/brand";
+
+document.title = brand.name;
 
 function App() {
 
   return (
     <main className="app">
-      <h1>Server Graph Visualization</h1>
+      <h1>{brand.name}</h1>
+      <p>{brand.description}</p>
       <section className="graphview-shell">
         <GraphView />
       </section>

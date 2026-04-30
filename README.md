@@ -1,4 +1,4 @@
 
 # MrView
 
-![logo](./assets/logo.png)
+actual name TBD
