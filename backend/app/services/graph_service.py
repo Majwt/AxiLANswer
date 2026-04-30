@@ -2,6 +2,8 @@ from app.models.graph import Node, Edge, GraphResponse
 
 def get_graph_data() -> GraphResponse:
     # Because run_datetime contains a space, parse manually
+    with open("data.in", 'r', encoding='utf-8') as f:
+        raw_data = f.read()
     lines = raw_data.strip().splitlines()
     rows = []
     
