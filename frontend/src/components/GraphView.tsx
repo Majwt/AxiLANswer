@@ -1,36 +1,62 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sigma from "sigma";
 import Graph from "graphology";
+import type { GraphData } from "../types/graph.ts";
 
-export default function GraphView() {
+type props = {
+  data: GraphData;
+};
+
+export default function GraphView({ data }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const textColor = getComputedStyle(document.documentElement)
+  .getPropertyValue("--text-h")
+  .trim();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const graph = new Graph();
+    const graph = createSigmaGraph(data);
 
-    graph.addNode("server1", {
-      x: 0,
-      y: 0,
-      size: 15,
-      label: "Server 1",
+
+
+    const renderer = new Sigma(graph, containerRef.current, {
+      labelColor: { color: textColor },
     });
-
-    graph.addNode("server2", {
-      x: 1,
-      y: 1,
-      size: 15,
-      label: "Server 2",
-    });
-
-    graph.addEdge("server1", "server2");
-
-    const renderer = new Sigma(graph, containerRef.current);
 
     return () => renderer.kill();
-  }, []);
+  }, [data]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
+}
+
+function createSigmaGraph(data: GraphData): Graph {
+  const graph = new Graph({ multi: true });
+  data.nodes.forEach((node, index) => {
+    graph.addNode(node.ip, {
+      label: node.fqdn ?? node.ip,
+      x: Math.cos(index),
+      y: Math.sin(index),
+      size: 12,
+    });
+  });
+
+  data.edges.forEach((edge) => {
+    // Only add edge if both nodes exist
+    if (!graph.hasNode(edge.source_ip) || !graph.hasNode(edge.target_ip)) {
+      return;
+    }
+
+    graph.addEdgeWithKey(edge.id, edge.source_ip, edge.target_ip, {
+      label: edge.target_port?.toString(),
+      source_port: edge.source_port,
+      target_port: edge.target_port,
+      process_name: edge.process_name,
+      pid: edge.pid,
+    });
+  });
+
+  return graph;
 }
