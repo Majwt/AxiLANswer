@@ -6,11 +6,11 @@ export type GraphNode = {
 export type GraphEdge = {
   id: string;
   source_ip: string;
-  source_port?: number;
-  source_fqdn?: string;
+  source_port: number;
+  source_fqdn: string;
   target_ip: string;
-  target_port?: number;
-  target_fqdn?: string;
+  target_port: number;
+  target_fqdn: string;
   pid?: number;
   process_name?: string;
 };
@@ -18,4 +18,14 @@ export type GraphEdge = {
 export type GraphData = {
   nodes: GraphNode[];
   edges: GraphEdge[];
+};
+
+
+export type CombinedEdge = {
+  id: string;
+  source_fqdn: string;
+  target_fqdn: string;
+  connections: GraphEdge[];
+  ports: number[];
+  processes: string[];
 };
