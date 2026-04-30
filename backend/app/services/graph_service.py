@@ -1,6 +1,13 @@
+from os import path, read
 from app.models.graph import Node, Edge, GraphResponse
 
 def get_graph_data() -> GraphResponse:
+
+    # TODO: Fetch from database instead of loading from file
+
+    with open("data.in", 'r', encoding='utf-8') as f:
+        raw_data = f.read()
+
     # Because run_datetime contains a space, parse manually
     lines = raw_data.strip().splitlines()
     rows = []
