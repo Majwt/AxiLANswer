@@ -117,7 +117,8 @@
 .app-content {
   flex: 1;
   position: relative;
-  display: flex; 
+  display: flex;
+  min-height: 0;
 }
 .graphview-shell {
   flex: 1;
@@ -144,6 +145,8 @@
   background: var(--bg);
   border-left: 1px solid var(--border);
   box-shadow: var(--shadow);
+  overflow-y: auto;
+  max-height: 100%;
   /* move in from the right */
   /* 
   position: fixed;
@@ -157,6 +160,22 @@
 
 .details-panel.open {
   transform: none;
+}
+
+.details-close {
+  margin-bottom: 0.75rem;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.details-table th,
+.details-table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .ticks {

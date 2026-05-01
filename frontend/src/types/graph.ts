@@ -36,8 +36,12 @@ export type NodeDetails = {
   ip: string;
   fqdn: string;
   subnet: string;
-  pids: number[];
-  ports: number[];
+  portTargets: {
+    port: number;
+    fqdn: string;
+    pid: number;
+    processName: string | null;
+  }[];
   size: number;
   x: number;
   y: number;

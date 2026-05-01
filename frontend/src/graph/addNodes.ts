@@ -1,9 +1,51 @@
 import Graph from "graphology";
-import type { GraphData } from "../types/graph";
+import type { GraphData, GraphNode } from "../types/graph";
 import type { NodeDetails } from "../types/graph";
+import type { GraphEdge } from "../types/graph";
 
-function getNodeId(ip: string, fqdn: string) {
-  return fqdn;
+
+function getPortTargets(fqdn: string, edges: GraphEdge[]) {
+  const seen = new Set<string>();
+  const portTargets: NodeDetails["portTargets"] = [];
+
+  edges.forEach((edge) => {
+    if (edge.source_fqdn === fqdn && edge.target_port) {
+      const pid = edge.pid ?? -1;
+      const processName = edge.process_name ?? null;
+      const key = `${edge.target_port}->${edge.target_fqdn}->${pid}->${processName ?? ""}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        portTargets.push({
+          port: edge.target_port,
+          fqdn: edge.target_fqdn,
+          pid,
+          processName,
+        });
+      }
+    }
+
+    if (edge.target_fqdn === fqdn && edge.target_port) {
+      const pid = edge.pid ?? -1;
+      const processName = edge.process_name ?? null;
+      const key = `${edge.target_port}->${edge.source_fqdn}->${pid}->${processName ?? ""}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        portTargets.push({
+          port: edge.target_port,
+          fqdn: edge.source_fqdn,
+          pid,
+          processName,
+        });
+      }
+    }
+  });
+
+  return portTargets.sort((a, b) =>
+    a.port - b.port
+    || a.fqdn.localeCompare(b.fqdn)
+    || a.pid - b.pid
+    || (a.processName ?? "").localeCompare(b.processName ?? "")
+  );
 }
 
 export function addNodes(graph: Graph, data: GraphData) {
@@ -11,17 +53,17 @@ export function addNodes(graph: Graph, data: GraphData) {
 
   const allIds = new Set<string>();
 
-  data.nodes.forEach((n) => allIds.add(getNodeId(n.ip, n.fqdn)));
+  data.nodes.forEach((n) => allIds.add(n.fqdn));
   data.edges.forEach((e) => {
-    allIds.add(getNodeId(e.source_ip, e.source_fqdn));
-    allIds.add(getNodeId(e.target_ip, e.target_fqdn));
+    allIds.add(e.source_fqdn);
+    allIds.add(e.target_fqdn);
   });
 
   const total = allIds.size;
   const radius = 10;
 
   function addNodeIfMissing(ip: string, fqdn: string) {
-    const id = getNodeId(ip, fqdn);
+    const id = fqdn; // Using FQDN as the unique identifier for nodes
 
     if (graph.hasNode(id)) return;
 
@@ -34,6 +76,7 @@ export function addNodes(graph: Graph, data: GraphData) {
       subnet: "192.168.1.0/24",
       pids: [],
       ports: [],
+      portTargets: getPortTargets(fqdn, data.edges),
       size: 12,
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius,
