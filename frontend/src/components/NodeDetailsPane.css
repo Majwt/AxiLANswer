@@ -1,0 +1,64 @@
+.details-panel {
+  width: 360px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-width: 280px;
+  max-width: 70vw;
+  position: relative;
+  box-sizing: border-box;
+  min-height: 0;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.details-content {
+  height: 97%;
+  min-height: 0;
+  padding: 1rem 1rem 1rem 1.25rem;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.details-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+  border-right: 1px solid var(--border);
+  background: color-mix(in oklab, var(--border) 35%, transparent);
+}
+
+.details-resize-handle:hover {
+  background: color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+.details-resize-handle::before {
+  content: "⋮⋮";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.85rem;
+  color: var(--text-h);
+  opacity: 0.7;
+}
+
+.details-close {
+  margin-bottom: 0.75rem;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.details-table th,
+.details-table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}

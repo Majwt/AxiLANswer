@@ -1,4 +1,5 @@
 
+import "./GraphView.css";
 import { useEffect, useRef } from "react";
 import Sigma from "sigma";
 import type { GraphData, NodeDetails } from "../types/graph.ts";
@@ -6,6 +7,9 @@ import { createGraph } from "../graph/createGraph.ts";
 import ForceSupervisor from "graphology-layout-force/worker";
 import type Graph from "graphology";
 import forceAtlas2 from "graphology-layout-forceatlas2";
+import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
+import { EdgeArrowProgram } from "sigma/rendering";
+import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
 
 type props = {
   data: GraphData;
@@ -28,6 +32,10 @@ export default function GraphView({ data, onSelectNode }: props) {
 
 
     const renderer = new Sigma(graph, containerRef.current, {
+      edgeProgramClasses: {
+        arrow: EdgeArrowProgram,
+        curvedArrow: EdgeCurvedArrowProgram,
+      },
       labelColor: { color: textColor },
     });
 
@@ -40,7 +48,7 @@ export default function GraphView({ data, onSelectNode }: props) {
       onSelectNode("", null);
     });
 
-    const useForceAtlas2 = false; // toggle between ForceAtlas2 and ForceSupervisor
+    const useForceAtlas2 = true; // toggle between ForceAtlas2 and ForceSupervisor
     if (useForceAtlas2) {
 
       // Force Layout
@@ -73,7 +81,8 @@ export default function GraphView({ data, onSelectNode }: props) {
       renderer.kill();
       // layout?.stop();
     }
-  }, [data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, textColor]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
 }
@@ -86,7 +95,7 @@ function enableNodeDragging(
   let draggedNode: string | null = null;
   let isDragging = false;
 
-  const onDownNode = (e: any) => {
+  const onDownNode = (e: SigmaNodeEventPayload) => {
     isDragging = true;
     draggedNode = e.node;
 
@@ -96,7 +105,7 @@ function enableNodeDragging(
     supervisor?.stop(); // optional
   };
 
-  const onMouseMove = (e: any) => {
+  const onMouseMove = (e: MouseCoords) => {
     if (!isDragging || !draggedNode) return;
 
     const pos = renderer.viewportToGraph(e);

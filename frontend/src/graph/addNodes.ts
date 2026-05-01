@@ -71,17 +71,16 @@ export function addNodes(graph: Graph, data: GraphData) {
     if (graph.hasNode(id)) return;
 
     const angle = (2 * Math.PI * index) / total;
-    
+
     const nodeDetails: NodeDetails = {
       label: fqdn,
       ip,
       fqdn,
-      subnet: "192.168.1.0/24",
+      subnet: "192.168.1.0/24", // collect somehow?
       portTargets: getPortTargets(fqdn, data.edges),
       size: 12,
-      x: Math.cos(angle) * radius,
+      x: Math.cos(angle) * radius, // cannot be 0 otherwise all nodes will be on top of each other
       y: Math.sin(angle) * radius,
-
     }
 
     graph.addNode(id, nodeDetails);

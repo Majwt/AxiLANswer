@@ -1,0 +1,43 @@
+:root {
+  /* base */
+  --bg: oklch(0.98 0 0);
+  --text: oklch(0.45 0.02 270);
+  --text-h: oklch(0.18 0.02 270);
+  --border: oklch(0.9 0 0);
+
+  /* surfaces */
+  --code-bg: oklch(0.95 0 0);
+  --social-bg: oklch(0.94 0 0 / 0.5);
+
+  /* accent  */
+  --accent: oklch(0.65 0.22 300);
+  --accent-bg: oklch(0.65 0.22 300 / 0.12);
+  --accent-border: oklch(0.65 0.22 300 / 0.4);
+
+  /* shadows still need rgba */
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(0.17 0.02 270);
+    --text: oklch(0.75 0.02 270);
+    --text-h: oklch(0.92 0.02 270);
+    --border: oklch(0.3 0.02 270);
+
+    --code-bg: oklch(0.22 0.02 270);
+    --social-bg: oklch(0.25 0.02 270 / 0.5);
+
+    --accent: oklch(0.75 0.18 300);
+    --accent-bg: oklch(0.75 0.18 300 / 0.15);
+    --accent-border: oklch(0.75 0.18 300 / 0.5);
+
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px,
+      rgba(0, 0, 0, 0.25) 0 4px 6px -2px;}
+}

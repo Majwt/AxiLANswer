@@ -1,3 +1,4 @@
+import "./NodeDetailsPane.css";
 import { useRef, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import type { NodeDetails } from "../types/graph";

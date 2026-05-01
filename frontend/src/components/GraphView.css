@@ -1,0 +1,11 @@
+.graphview-canvas {
+  flex: 1;
+  position: relative;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.graphview-canvas > canvas {
+  top: 0;
+  left: 0;
+}

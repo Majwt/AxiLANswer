@@ -4,7 +4,10 @@ import { groupEdges } from "./groupEdges";
 import { addNodes } from "./addNodes";
 
 export function createGraph(data: GraphData) {
-  const graph = new Graph();
+  const graph = new Graph({
+    multi: true,
+    type: "directed",
+  });
 
   addNodes(graph, data);
 
@@ -22,6 +25,7 @@ export function createGraph(data: GraphData) {
       connections: edge.connections,
       ports: edge.ports,
       processes: edge.processes,
+      type: "arrow",
     });
   });
 
