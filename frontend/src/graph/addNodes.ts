@@ -1,5 +1,5 @@
 import Graph from "graphology";
-import type { GraphData, GraphNode } from "../types/graph";
+import type { GraphData } from "../types/graph";
 import type { NodeDetails } from "../types/graph";
 import type { GraphEdge } from "../types/graph";
 
@@ -12,11 +12,12 @@ function getPortTargets(fqdn: string, edges: GraphEdge[]) {
     if (edge.source_fqdn === fqdn && edge.target_port) {
       const pid = edge.pid ?? -1;
       const processName = edge.process_name ?? null;
-      const key = `${edge.target_port}->${edge.target_fqdn}->${pid}->${processName ?? ""}`;
+      const key = `${edge.source_port}->${edge.target_port}->${edge.target_fqdn}->${pid}->${processName ?? ""}`;
       if (!seen.has(key)) {
         seen.add(key);
         portTargets.push({
-          port: edge.target_port,
+          port: edge.source_port,
+          remote_port: edge.target_port,
           fqdn: edge.target_fqdn,
           pid,
           processName,
@@ -27,11 +28,12 @@ function getPortTargets(fqdn: string, edges: GraphEdge[]) {
     if (edge.target_fqdn === fqdn && edge.target_port) {
       const pid = edge.pid ?? -1;
       const processName = edge.process_name ?? null;
-      const key = `${edge.target_port}->${edge.source_fqdn}->${pid}->${processName ?? ""}`;
+      const key = `${edge.target_port}->${edge.source_port}->${edge.source_fqdn}->${pid}->${processName ?? ""}`;
       if (!seen.has(key)) {
         seen.add(key);
         portTargets.push({
           port: edge.target_port,
+          remote_port: edge.source_port,
           fqdn: edge.source_fqdn,
           pid,
           processName,
@@ -42,6 +44,7 @@ function getPortTargets(fqdn: string, edges: GraphEdge[]) {
 
   return portTargets.sort((a, b) =>
     a.port - b.port
+    || a.remote_port - b.remote_port
     || a.fqdn.localeCompare(b.fqdn)
     || a.pid - b.pid
     || (a.processName ?? "").localeCompare(b.processName ?? "")
@@ -74,8 +77,6 @@ export function addNodes(graph: Graph, data: GraphData) {
       ip,
       fqdn,
       subnet: "192.168.1.0/24",
-      pids: [],
-      ports: [],
       portTargets: getPortTargets(fqdn, data.edges),
       size: 12,
       x: Math.cos(angle) * radius,

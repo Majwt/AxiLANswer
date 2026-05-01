@@ -106,12 +106,14 @@
 }
 
 .app {
-  min-height: 100svh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   /* align-items: center; */
   padding: 0;
   box-sizing: border-box;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .app-content {
@@ -119,10 +121,12 @@
   position: relative;
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 .graphview-shell {
   flex: 1;
   display: flex;
+  min-height: 0;
 }
 
 .graphview-canvas {
@@ -141,12 +145,16 @@
 .details-panel {
   width: 360px;
   flex-shrink: 0;
-  padding: 1rem;
+  align-self: stretch;
+  min-width: 280px;
+  max-width: 70vw;
+  position: relative;
+  box-sizing: border-box;
+  min-height: 0;
   background: var(--bg);
   border-left: 1px solid var(--border);
   box-shadow: var(--shadow);
-  overflow-y: auto;
-  max-height: 100%;
+  overflow: hidden;
   /* move in from the right */
   /* 
   position: fixed;
@@ -160,6 +168,41 @@
 
 .details-panel.open {
   transform: none;
+}
+
+.details-content {
+  height: 97%;
+  min-height: 0;
+  padding: 1rem;
+  padding-left: 1.25rem;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.details-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+  border-right: 1px solid var(--border);
+  background: color-mix(in oklab, var(--border) 35%, transparent);
+}
+
+.details-resize-handle:hover {
+  background: color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+.details-resize-handle::before {
+  content: "⋮⋮";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.85rem;
+  color: var(--text-h);
+  opacity: 0.7;
 }
 
 .details-close {

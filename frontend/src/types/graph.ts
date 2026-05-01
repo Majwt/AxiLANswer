@@ -38,6 +38,7 @@ export type NodeDetails = {
   subnet: string;
   portTargets: {
     port: number;
+    remote_port: number;
     fqdn: string;
     pid: number;
     processName: string | null;

@@ -31,7 +31,7 @@ function App() {
         <div className="graphview-shell">
           {data ? <GraphView data={data} onSelectNode={(_node, attrs) => setSelectedNode(attrs)} /> : <p>Loading graph...</p>}
         </div>
-        <NodeDetailsPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+        <NodeDetailsPanel node={selectedNode} />
       </section>
     </main>
   )
