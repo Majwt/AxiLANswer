@@ -1,8 +1,9 @@
 import Graph from "graphology";
 import type { GraphData } from "../types/graph";
+import type { NodeDetails } from "../types/graph";
 
-function getNodeId(ip: string, fqdn?: string) {
-  return fqdn ?? ip;
+function getNodeId(ip: string, fqdn: string) {
+  return fqdn;
 }
 
 export function addNodes(graph: Graph, data: GraphData) {
@@ -19,21 +20,27 @@ export function addNodes(graph: Graph, data: GraphData) {
   const total = allIds.size;
   const radius = 10;
 
-  function addNodeIfMissing(ip: string, fqdn?: string) {
+  function addNodeIfMissing(ip: string, fqdn: string) {
     const id = getNodeId(ip, fqdn);
 
     if (graph.hasNode(id)) return;
 
     const angle = (2 * Math.PI * index) / total;
-
-    graph.addNode(id, {
-      label: fqdn ?? ip,
+    
+    const nodeDetails: NodeDetails = {
+      label: fqdn,
       ip,
       fqdn,
+      subnet: "192.168.1.0/24",
+      pids: [],
+      ports: [],
       size: 12,
       x: Math.cos(angle) * radius,
       y: Math.sin(angle) * radius,
-    });
+
+    }
+
+    graph.addNode(id, nodeDetails);
 
     index++;
   }

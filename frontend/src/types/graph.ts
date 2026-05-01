@@ -1,5 +1,5 @@
 export type GraphNode = {
-  fqdn?: string;
+  fqdn: string;
   ip: string;
 };
 
@@ -29,3 +29,16 @@ export type CombinedEdge = {
   ports: number[];
   processes: string[];
 };
+
+
+export type NodeDetails = {
+  label: string;
+  ip: string;
+  fqdn: string;
+  subnet: string;
+  pids: number[];
+  ports: number[];
+  size: number;
+  x: number;
+  y: number;
+}

@@ -1,11 +1,10 @@
 import Graph from "graphology";
-import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { GraphData } from "../types/graph";
 import { groupEdges } from "./groupEdges";
 import { addNodes } from "./addNodes";
 
 export function createGraph(data: GraphData) {
-  const graph = new Graph({multi: true});
+  const graph = new Graph();
 
   addNodes(graph, data);
 
@@ -13,6 +12,7 @@ export function createGraph(data: GraphData) {
 
   groupedEdges.forEach((edge) => {
     if (!graph.hasNode(edge.source_fqdn) || !graph.hasNode(edge.target_fqdn)) {
+      console.log("edge skipped due to missing node:", edge);
       return;
     }
 
@@ -25,14 +25,6 @@ export function createGraph(data: GraphData) {
     });
   });
 
-  forceAtlas2.assign(graph, {
-    iterations: 100,
-    settings: {
-      gravity: 2.5,
-      scalingRatio: 2,
-      strongGravityMode: false,
-    },
-  });
 
   return graph;
 }
