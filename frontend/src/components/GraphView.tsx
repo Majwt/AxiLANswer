@@ -6,7 +6,7 @@ import type { GraphData, NodeDetails } from "../types/graph.ts";
 import { createGraph } from "../graph/createGraph.ts";
 import ForceSupervisor from "graphology-layout-force/worker";
 import type Graph from "graphology";
-import forceAtlas2 from "graphology-layout-forceatlas2";
+// import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
 import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
 
@@ -63,18 +63,18 @@ export default function GraphView({ data, onSelectNode }: props) {
   return <div ref={containerRef} className="graphview-canvas" />;
 }
 
-function forceAtlas2Layout(graph: Graph) {
-  forceAtlas2.assign(graph, {
-    iterations: 100,
-    settings: {
-      gravity: 2.5,
-      scalingRatio: 2,
-      strongGravityMode: false,
-    },
-  });
-
-  return () => { };
-}
+// function forceAtlas2Layout(graph: Graph) {
+//   forceAtlas2.assign(graph, {
+//     iterations: 100,
+//     settings: {
+//       gravity: 2.5,
+//       scalingRatio: 2,
+//       strongGravityMode: false,
+//     },
+//   });
+//
+//   return () => { };
+// }
 
 
 

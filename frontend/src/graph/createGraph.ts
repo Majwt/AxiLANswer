@@ -6,7 +6,6 @@ import { setupCurvedEdges } from "./setupCurvedEdges";
 import Sigma from "sigma";
 import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
 import { EdgeArrowProgram, type NodeHoverDrawingFunction, type NodeLabelDrawingFunction } from "sigma/rendering";
-import type { Attributes } from "react";
 
 /**
  * Creates a Graphology graph from the given GraphData.
@@ -73,9 +72,10 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
   return [renderer, graph];
 }
 
-function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: any) {
+function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: Record<string, unknown>) {
   if (!selectedNodeId) return { ...nodeData };
 
+  const nodeSize = typeof nodeData.size === "number" ? nodeData.size : 6;
   const isConnected = connectedNodeIds.has(node);
 
   if (!isConnected) {
@@ -85,7 +85,7 @@ function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId
       highlighted: false,
       forceLabel: false,
       zIndex: 1,
-      size: Math.max(nodeData.size * 0.9, 6),
+      size: Math.max(nodeSize * 0.9, 6),
     };
   }
 
@@ -95,7 +95,7 @@ function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId
       highlighted: true,
       forceLabel: true,
       zIndex: 10,
-      size: nodeData.size * 1.3,
+      size: nodeSize * 1.3,
     };
   }
 
