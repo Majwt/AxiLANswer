@@ -1,8 +1,17 @@
 
 .app-header {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
+  &>* {
+    user-select: none;
+    pointer-events: none;
+  }
 }
 .app-name {
   font-size: 1.5em;

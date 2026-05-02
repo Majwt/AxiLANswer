@@ -11,13 +11,28 @@
 .app-content {
   flex: 1;
   position: relative;
-  display: flex;
   min-height: 0;
   overflow: hidden;
 }
 
 .graphview-shell {
-  flex: 1;
-  display: flex;
+  position: absolute;
+  inset: 0;
   min-height: 0;
+}
+
+.graphview-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.graphview-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  color: var(--text-h);
 }

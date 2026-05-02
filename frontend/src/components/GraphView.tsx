@@ -18,6 +18,7 @@ type props = {
 
 export default function GraphView({ data, onSelectNode }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
 
   const textColor = getComputedStyle(document.documentElement)
@@ -39,6 +40,97 @@ export default function GraphView({ data, onSelectNode }: props) {
       labelColor: { color: textColor },
     });
 
+    // background grid
+    // --------------------------------
+    const gridLayer = document.createElement("div");
+    gridLayer.className = "graphview-grid";
+    gridLayer.setAttribute("aria-hidden", "true");
+    containerRef.current.appendChild(gridLayer);
+    gridRef.current = gridLayer;
+
+    const camera = renderer.getCamera();
+    const setInitialCamera = () => {
+      renderer.refresh();
+      camera.animatedReset({ duration: 0 });
+      camera.updateState((state) => ({ ratio: state.ratio * 1.6 }));
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const delta = event.deltaY * -3 / 360;
+      if (!delta) return;
+
+      const bounds = container.getBoundingClientRect();
+      const target = {
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      };
+      const currentRatio = camera.getState().ratio;
+      const zoomingRatio = renderer.getSetting("zoomingRatio");
+      const newRatio = camera.getBoundedRatio(
+        currentRatio * (delta > 0 ? 1 / zoomingRatio : zoomingRatio),
+      );
+
+      if (currentRatio === newRatio) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      camera.setState(
+        renderer.getViewportZoomedState(target, newRatio),
+      );
+    };
+    containerRef.current.addEventListener("wheel", onWheel, { passive: false });
+
+    const updateGrid = () => {
+      if (!gridRef.current) return;
+
+      const origin = renderer.graphToViewport({ x: 0, y: 0 });
+      const xStep = renderer.graphToViewport({ x: 1, y: 0 });
+      const yStep = renderer.graphToViewport({ x: 0, y: 1 });
+
+      const pixelsPerGraphUnit = (Math.abs(xStep.x - origin.x) + Math.abs(yStep.y - origin.y)) / 2;
+      if (pixelsPerGraphUnit <= 0) return;
+
+      const targetSpacingPx = 85;
+      const minSpacingPx = 75;
+      const maxSpacingPx = 100;
+      const rawUnitsStep = targetSpacingPx / pixelsPerGraphUnit;
+      const exponent = Math.floor(Math.log10(rawUnitsStep));
+
+      let bestStep = rawUnitsStep;
+      let bestScore = Number.POSITIVE_INFINITY;
+
+      for (let exp = exponent - 1; exp <= exponent + 2; exp += 1) {
+        const base = 10 ** exp;
+        for (const factor of [1, 2, 5]) {
+          const unitsStep = factor * base;
+          const spacingPx = unitsStep * pixelsPerGraphUnit;
+          const inRangePenalty = spacingPx < minSpacingPx || spacingPx > maxSpacingPx ? 1000 : 0;
+          const score = Math.abs(spacingPx - targetSpacingPx) + inRangePenalty;
+          if (score < bestScore) {
+            bestScore = score;
+            bestStep = unitsStep;
+          }
+        }
+      }
+
+      const spacing = Math.max(6, bestStep * pixelsPerGraphUnit);
+      const offsetX = ((origin.x % spacing) + spacing) % spacing;
+      const offsetY = ((origin.y % spacing) + spacing) % spacing;
+
+      gridRef.current.style.setProperty("--grid-spacing", `${spacing}px`);
+      gridRef.current.style.setProperty("--grid-offset-x", `${offsetX}px`);
+      gridRef.current.style.setProperty("--grid-offset-y", `${offsetY}px`);
+    };
+
+    camera.on("updated", updateGrid);
+    window.addEventListener("resize", updateGrid);
+    updateGrid();
+    // --------------------------------
+    //
     renderer.on("clickNode", ({ node }) => {
       const attrs = graph.getNodeAttributes(node) as NodeDetails;
       onSelectNode(node, attrs);
@@ -60,6 +152,7 @@ export default function GraphView({ data, onSelectNode }: props) {
           strongGravityMode: false,
         },
       });
+      setInitialCamera();
 
     }
     else {
@@ -74,10 +167,16 @@ export default function GraphView({ data, onSelectNode }: props) {
       // enable moving with mouse
       enableNodeDragging(renderer, graph, layout);
       // -- 
+      setInitialCamera();
 
     }
 
     return () => {
+      containerRef.current?.removeEventListener("wheel", onWheel);
+      camera.removeListener("updated", updateGrid);
+      window.removeEventListener("resize", updateGrid);
+      gridRef.current?.remove();
+      gridRef.current = null;
       renderer.kill();
       // layout?.stop();
     }

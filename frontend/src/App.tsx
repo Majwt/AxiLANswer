@@ -23,13 +23,14 @@ function App() {
 
   return (
     <main className="app">
-      
-      <AppHeader />
       <section className="app-content">
         <div className="graphview-shell">
-          {data ? <GraphView data={data} onSelectNode={(_node, attrs) => setSelectedNode(attrs)} /> : <p>Loading graph...</p>}
+          {data ? <GraphView data={data} onSelectNode={(_node, attrs) => setSelectedNode(attrs)} /> : <p className="graphview-loading">Loading graph...</p>}
         </div>
-        <NodeDetailsPanel node={selectedNode} />
+        <div className="graphview-overlay">
+          <AppHeader />
+          <NodeDetailsPanel node={selectedNode} />
+        </div>
       </section>
     </main>
   )

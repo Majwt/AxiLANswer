@@ -1,11 +1,31 @@
 .graphview-canvas {
-  flex: 1;
-  position: relative;
-  border: 1px solid var(--border);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  background: var(--bg);
+}
+
+.graphview-grid {
+  --grid-spacing: 14px;
+  --grid-offset-x: 0px;
+  --grid-offset-y: 0px;
+
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle,
+    rgba(128, 128, 128, 0.82) 3.2px,
+    transparent 1px
+  );
+  background-size: var(--grid-spacing) var(--grid-spacing);
+  background-position: var(--grid-offset-x) var(--grid-offset-y);
 }
 
 .graphview-canvas > canvas {
-  top: 0;
-  left: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
