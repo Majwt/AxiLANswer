@@ -11,6 +11,23 @@ function getNodeSize(connectionCount: number): number {
   return Math.min(baseSize + growth, 28);
 }
 
+function getFqdnSuffix(fqdn: string): string {
+  const parts = fqdn.split(".").filter(Boolean);
+  return parts.length ? parts[parts.length - 1].toLowerCase() : fqdn.toLowerCase();
+}
+
+function getNodeColor(fqdn: string): string {
+  const suffix = getFqdnSuffix(fqdn);
+  let hash = 0;
+  for (let i = 0; i < suffix.length; i += 1) {
+    hash = (hash * 48 + suffix.charCodeAt(i)) >>> 0;
+  }
+  const r = 64 + (hash & 0x7f);
+  const g = 64 + ((hash >>> 8) & 0x7f);
+  const b = 64 + ((hash >>> 16) & 0x7f);
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
 function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
   const index = new Map<string, { targets: PortTarget[]; seen: Set<string> }>();
 
@@ -97,6 +114,7 @@ export function addNodes(graph: Graph, data: GraphData) {
       label: fqdn,
       ip: fqdnToIp.get(fqdn) ?? "",
       fqdn,
+      color: getNodeColor(fqdn),
       subnet: "",
       portTargets: portTargetsIndex.get(fqdn) ?? [],
       size: getNodeSize(connectionCountByFqdn.get(fqdn) ?? 0),

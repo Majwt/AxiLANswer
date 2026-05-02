@@ -35,6 +35,7 @@ export type NodeDetails = {
   label: string;
   ip: string;
   fqdn: string;
+  color: string;
   subnet: string;
   portTargets: {
     port: number;
