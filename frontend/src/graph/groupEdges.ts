@@ -20,7 +20,7 @@ export function groupEdges(edges: GraphEdge[]): CombinedEdge[] {
     const group = map.get(key)!;
     group.connections.push(edge);
 
-    if (edge.target_port && !group.ports.includes(edge.target_port)) {
+    if (!group.ports.includes(edge.target_port)) {
       group.ports.push(edge.target_port);
     }
 
