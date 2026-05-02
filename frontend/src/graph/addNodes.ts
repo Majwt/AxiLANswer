@@ -81,6 +81,12 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
   return result;
 }
 
+/**
+ * Adds nodes to the graph based on the provided graph data.
+ *
+ * @param graph - The graph to add nodes to.
+ * @param data - The graph data containing nodes and edges.
+ */
 export function addNodes(graph: Graph, data: GraphData) {
   const { nodes, edges } = data;
   const portTargetsIndex = createEdgePortIndex(edges);

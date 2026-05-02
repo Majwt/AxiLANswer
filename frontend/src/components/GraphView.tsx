@@ -8,101 +8,21 @@ import ForceSupervisor from "graphology-layout-force/worker";
 import type Graph from "graphology";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
-import { EdgeArrowProgram } from "sigma/rendering";
-import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
-import type { NodeHoverDrawingFunction, NodeLabelDrawingFunction } from "sigma/rendering";
+import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
 
 type props = {
   data: GraphData;
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
 };
 
-function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  const radius = Math.min(r, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.lineTo(x + w - radius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-  ctx.lineTo(x + w, y + h - radius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-  ctx.lineTo(x + radius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-  ctx.lineTo(x, y + radius);
-  ctx.quadraticCurveTo(x, y, x + radius, y);
-  ctx.closePath();
-}
 
-function createNodeLabelDrawer(textColor: string, backgroundColor: string): NodeLabelDrawingFunction {
-  return (context, data, settings) => {
-    if (!data.label) return;
-
-    const fontSize = settings.labelSize;
-    const font = `${settings.labelWeight} ${fontSize}px ${settings.labelFont}`;
-    context.font = font;
-
-    const label = String(data.label);
-    const paddingX = 6;
-    const paddingY = 3;
-    const labelX = data.x + data.size + 4;
-    const labelY = data.y + fontSize / 3;
-    const textWidth = context.measureText(label).width;
-    const boxX = labelX - paddingX;
-    const boxY = labelY - fontSize - paddingY;
-    const boxWidth = textWidth + paddingX * 2;
-    const boxHeight = fontSize + paddingY * 2;
-
-    context.save();
-    context.fillStyle = backgroundColor;
-    context.globalAlpha = 0.82;
-    drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 6);
-    context.fill();
-
-    context.globalAlpha = 1;
-    context.fillStyle = textColor;
-    context.font = font;
-    context.fillText(label, labelX, labelY);
-    context.restore();
-  };
-}
-
-function createNodeHoverLabelDrawer(): NodeHoverDrawingFunction {
-  return (context, data, settings) => {
-    if (!data.label) return;
-
-    const fontSize = settings.labelSize + 1;
-    const font = `700 ${fontSize}px ${settings.labelFont}`;
-    context.font = font;
-
-    const label = String(data.label);
-    const paddingX = 7;
-    const paddingY = 4;
-    const labelX = data.x + data.size + 5;
-    const labelY = data.y + fontSize / 3;
-    const textWidth = context.measureText(label).width;
-    const boxX = labelX - paddingX;
-    const boxY = labelY - fontSize - paddingY;
-    const boxWidth = textWidth + paddingX * 2;
-    const boxHeight = fontSize + paddingY * 2;
-
-    context.save();
-    context.fillStyle = "#000000";
-    context.globalAlpha = 0.88;
-    drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 7);
-    context.fill();
-
-    context.globalAlpha = 0.45;
-    context.strokeStyle = "#ffffff";
-    context.lineWidth = 1;
-    context.stroke();
-
-    context.globalAlpha = 1;
-    context.fillStyle = "#ffffff";
-    context.font = font;
-    context.fillText(label, labelX, labelY);
-    context.restore();
-  };
-}
-
+/**
+ * GraphView component renders an interactive graph visualization using Sigma.js.
+ *
+ * @param {GraphData} data - The graph data containing nodes and edges to visualize.
+ * @param {(node: string, attrs: NodeDetails | null) => void} onSelectNode - Callback function triggered when a node is selected, providing the node ID and its attributes.
+ *
+ */
 export default function GraphView({ data, onSelectNode }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -118,216 +38,64 @@ export default function GraphView({ data, onSelectNode }: props) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const graph = createGraph(data);
-    let selectedNodeId: string | null = null;
-    let connectedNodeIds = new Set<string>();
-
-
-
-    const renderer = new Sigma(graph, containerRef.current, {
-      edgeProgramClasses: {
-        arrow: EdgeArrowProgram,
-        curvedArrow: EdgeCurvedArrowProgram,
-      },
-      labelColor: { color: textColor },
-      defaultDrawNodeLabel: createNodeLabelDrawer(textColor, backgroundColor),
-      defaultDrawNodeHover: createNodeHoverLabelDrawer(),
-      nodeReducer: (node, nodeData) => {
-        if (!selectedNodeId) return { ...nodeData };
-
-        const isConnected = connectedNodeIds.has(node);
-
-        if (!isConnected) {
-          return {
-            ...nodeData,
-            color: "#2a2f36",
-            highlighted: false,
-            forceLabel: false,
-            zIndex: 1,
-            size: Math.max(nodeData.size * 0.9, 6),
-          };
-        }
-
-        if (node === selectedNodeId) {
-          return {
-            ...nodeData,
-            highlighted: true,
-            forceLabel: true,
-            zIndex: 10,
-            size: nodeData.size * 1.3,
-          };
-        }
-
-        return {
-          ...nodeData,
-          zIndex: 1,
-        };
-      },
-      edgeReducer: (edge, edgeData) => {
-        if (!selectedNodeId) return { ...edgeData };
-
-        const [source, target] = graph.extremities(edge);
-        const isConnectedEdge = source === selectedNodeId || target === selectedNodeId;
-
-        return {
-          ...edgeData,
-          hidden: !isConnectedEdge,
-        };
-      },
-    });
-
-    // background grid
-    // --------------------------------
-    const gridLayer = document.createElement("div");
-    gridLayer.className = "graphview-grid";
-    gridLayer.setAttribute("aria-hidden", "true");
-    containerRef.current.appendChild(gridLayer);
-    gridRef.current = gridLayer;
-
-    const camera = renderer.getCamera();
-    const setInitialCamera = () => {
-      renderer.refresh();
-      camera.animatedReset({ duration: 0 });
-      camera.updateState((state) => ({ ratio: state.ratio * 1.6 }));
-    };
-
-    const onWheel = (event: WheelEvent) => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const delta = event.deltaY * -3 / 360;
-      if (!delta) return;
-
-      const bounds = container.getBoundingClientRect();
-      const target = {
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      };
-      const currentRatio = camera.getState().ratio;
-      const zoomingRatio = renderer.getSetting("zoomingRatio");
-      const newRatio = camera.getBoundedRatio(
-        currentRatio * (delta > 0 ? 1 / zoomingRatio : zoomingRatio),
-      );
-
-      if (currentRatio === newRatio) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      camera.setState(
-        renderer.getViewportZoomedState(target, newRatio),
-      );
-    };
-    containerRef.current.addEventListener("wheel", onWheel, { passive: false });
-
-    const updateGrid = () => {
-      if (!gridRef.current) return;
-
-      const origin = renderer.graphToViewport({ x: 0, y: 0 });
-      const xStep = renderer.graphToViewport({ x: 1, y: 0 });
-      const yStep = renderer.graphToViewport({ x: 0, y: 1 });
-
-      const pixelsPerGraphUnit = (Math.abs(xStep.x - origin.x) + Math.abs(yStep.y - origin.y)) / 2;
-      if (pixelsPerGraphUnit <= 0) return;
-
-      const targetSpacingPx = 85;
-      const minSpacingPx = 75;
-      const maxSpacingPx = 100;
-      const rawUnitsStep = targetSpacingPx / pixelsPerGraphUnit;
-      const exponent = Math.floor(Math.log10(rawUnitsStep));
-
-      let bestStep = rawUnitsStep;
-      let bestScore = Number.POSITIVE_INFINITY;
-
-      for (let exp = exponent - 1; exp <= exponent + 2; exp += 1) {
-        const base = 10 ** exp;
-        for (const factor of [1, 2, 5]) {
-          const unitsStep = factor * base;
-          const spacingPx = unitsStep * pixelsPerGraphUnit;
-          const inRangePenalty = spacingPx < minSpacingPx || spacingPx > maxSpacingPx ? 1000 : 0;
-          const score = Math.abs(spacingPx - targetSpacingPx) + inRangePenalty;
-          if (score < bestScore) {
-            bestScore = score;
-            bestStep = unitsStep;
-          }
-        }
-      }
-
-      const spacing = Math.max(6, bestStep * pixelsPerGraphUnit);
-      const offsetX = ((origin.x % spacing) + spacing) % spacing;
-      const offsetY = ((origin.y % spacing) + spacing) % spacing;
-
-      gridRef.current.style.setProperty("--grid-spacing", `${spacing}px`);
-      gridRef.current.style.setProperty("--grid-offset-x", `${offsetX}px`);
-      gridRef.current.style.setProperty("--grid-offset-y", `${offsetY}px`);
-    };
-
-    camera.on("updated", updateGrid);
-    window.addEventListener("resize", updateGrid);
-    updateGrid();
-    // --------------------------------
-    //
-    renderer.on("clickNode", ({ node }) => {
-      selectedNodeId = node;
-      connectedNodeIds = new Set([node]);
-      graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
-      renderer.refresh();
-      const attrs = graph.getNodeAttributes(node) as NodeDetails;
-      onSelectNode(node, attrs);
-    });
-
-    renderer.on("clickStage", () => {
-      selectedNodeId = null;
-      connectedNodeIds = new Set();
-      renderer.refresh();
-      onSelectNode("", null);
-    });
-
-    const useForceAtlas2 = true; // toggle between ForceAtlas2 and ForceSupervisor
-    if (useForceAtlas2) {
-
-      // Force Layout
-      forceAtlas2.assign(graph, {
-        iterations: 100,
-        settings: {
-          gravity: 2.5,
-          scalingRatio: 2,
-          strongGravityMode: false,
-        },
+    const [renderer, graph] = createGraph(
+      containerRef.current,
+      onSelectNode,
+      data,
+      {
+        text: textColor,
+        background: backgroundColor
       });
-      setInitialCamera();
 
-    }
-    else {
-      // -- Enable force layout with fixed nodes --
-      const layout = new ForceSupervisor(graph, {
-        isNodeFixed: (_, attr) => attr.fixed, settings: {
-          attraction: 0.0005,
-          repulsion: 0.2,
-        },
-      });
-      layout.start();
-      // enable moving with mouse
-      enableNodeDragging(renderer, graph, layout);
-      // -- 
-      setInitialCamera();
-
-    }
+    const backgroundCleanup = setupBackgroundGrid(renderer, containerRef.current, gridRef);
+    // layout
+    const layoutCleanup = forceSupervisorLayout(renderer, graph);
 
     return () => {
-      containerRef.current?.removeEventListener("wheel", onWheel);
-      camera.removeListener("updated", updateGrid);
-      window.removeEventListener("resize", updateGrid);
-      gridRef.current?.remove();
-      gridRef.current = null;
+      backgroundCleanup();
+      layoutCleanup();
       renderer.kill();
-      // layout?.stop();
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, textColor, backgroundColor]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
 }
+
+function forceAtlas2Layout(graph: Graph) {
+  forceAtlas2.assign(graph, {
+    iterations: 100,
+    settings: {
+      gravity: 2.5,
+      scalingRatio: 2,
+      strongGravityMode: false,
+    },
+  });
+
+  return () => { };
+}
+
+
+
+function forceSupervisorLayout(renderer: Sigma, graph: Graph) {
+
+  const layout = new ForceSupervisor(graph, {
+    isNodeFixed: (_, attr) => attr.fixed, settings: {
+      attraction: 0.0005,
+      repulsion: 1,
+    },
+  });
+
+  const cleanup_drag = enableNodeDragging(renderer, graph, layout);
+  layout.start();
+  return () => {
+    cleanup_drag();
+    layout.stop();
+    layout.kill();
+  }
+}
+
 
 function enableNodeDragging(
   renderer: Sigma,
@@ -344,7 +112,7 @@ function enableNodeDragging(
     graph.setNodeAttribute(draggedNode, "fixed", true);
     renderer.getCamera().disable();
 
-    supervisor?.stop(); // optional
+    // supervisor?.stop(); // optional
   };
 
   const onMouseMove = (e: MouseCoords) => {
