@@ -10,11 +10,98 @@ import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
 import { EdgeArrowProgram } from "sigma/rendering";
 import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
+import type { NodeHoverDrawingFunction, NodeLabelDrawingFunction } from "sigma/rendering";
 
 type props = {
   data: GraphData;
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
 };
+
+function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+function createNodeLabelDrawer(textColor: string, backgroundColor: string): NodeLabelDrawingFunction {
+  return (context, data, settings) => {
+    if (!data.label) return;
+
+    const fontSize = settings.labelSize;
+    const font = `${settings.labelWeight} ${fontSize}px ${settings.labelFont}`;
+    context.font = font;
+
+    const label = String(data.label);
+    const paddingX = 6;
+    const paddingY = 3;
+    const labelX = data.x + data.size + 4;
+    const labelY = data.y + fontSize / 3;
+    const textWidth = context.measureText(label).width;
+    const boxX = labelX - paddingX;
+    const boxY = labelY - fontSize - paddingY;
+    const boxWidth = textWidth + paddingX * 2;
+    const boxHeight = fontSize + paddingY * 2;
+
+    context.save();
+    context.fillStyle = backgroundColor;
+    context.globalAlpha = 0.82;
+    drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 6);
+    context.fill();
+
+    context.globalAlpha = 1;
+    context.fillStyle = textColor;
+    context.font = font;
+    context.fillText(label, labelX, labelY);
+    context.restore();
+  };
+}
+
+function createNodeHoverLabelDrawer(): NodeHoverDrawingFunction {
+  return (context, data, settings) => {
+    if (!data.label) return;
+
+    const fontSize = settings.labelSize + 1;
+    const font = `700 ${fontSize}px ${settings.labelFont}`;
+    context.font = font;
+
+    const label = String(data.label);
+    const paddingX = 7;
+    const paddingY = 4;
+    const labelX = data.x + data.size + 5;
+    const labelY = data.y + fontSize / 3;
+    const textWidth = context.measureText(label).width;
+    const boxX = labelX - paddingX;
+    const boxY = labelY - fontSize - paddingY;
+    const boxWidth = textWidth + paddingX * 2;
+    const boxHeight = fontSize + paddingY * 2;
+
+    context.save();
+    context.fillStyle = "#000000";
+    context.globalAlpha = 0.88;
+    drawRoundedRect(context, boxX, boxY, boxWidth, boxHeight, 7);
+    context.fill();
+
+    context.globalAlpha = 0.45;
+    context.strokeStyle = "#ffffff";
+    context.lineWidth = 1;
+    context.stroke();
+
+    context.globalAlpha = 1;
+    context.fillStyle = "#ffffff";
+    context.font = font;
+    context.fillText(label, labelX, labelY);
+    context.restore();
+  };
+}
 
 export default function GraphView({ data, onSelectNode }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,6 +110,9 @@ export default function GraphView({ data, onSelectNode }: props) {
 
   const textColor = getComputedStyle(document.documentElement)
     .getPropertyValue("--text-h")
+    .trim();
+  const backgroundColor = getComputedStyle(document.documentElement)
+    .getPropertyValue("--bg")
     .trim();
 
   useEffect(() => {
@@ -38,6 +128,8 @@ export default function GraphView({ data, onSelectNode }: props) {
         curvedArrow: EdgeCurvedArrowProgram,
       },
       labelColor: { color: textColor },
+      defaultDrawNodeLabel: createNodeLabelDrawer(textColor, backgroundColor),
+      defaultDrawNodeHover: createNodeHoverLabelDrawer(),
     });
 
     // background grid
@@ -181,7 +273,7 @@ export default function GraphView({ data, onSelectNode }: props) {
       // layout?.stop();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, textColor]);
+  }, [data, textColor, backgroundColor]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
 }
