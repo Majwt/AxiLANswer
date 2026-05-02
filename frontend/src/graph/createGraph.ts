@@ -29,6 +29,7 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
   let connectedNodeIds = new Set<string>();
 
   const renderer = new Sigma(graph, containerRef, {
+    zIndex: true,
     defaultEdgeType: "straight",
     edgeProgramClasses: {
       straight: EdgeArrowProgram,
@@ -100,7 +101,9 @@ function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId
 
   return {
     ...nodeData,
-    zIndex: 1,
+    highlighted: true,
+    forceLabel: true,
+    zIndex: 9,
   };
 
 }
@@ -117,9 +120,9 @@ function createNodeLabelDrawer(textColor: string, backgroundColor: string): Node
     const label = String(data.label);
     const paddingX = 6;
     const paddingY = 3;
-    const labelX = data.x + data.size + 4;
-    const labelY = data.y + fontSize / 3;
     const textWidth = context.measureText(label).width;
+    const labelX = data.x - textWidth / 2;
+    const labelY = data.y - data.size - 8;
     const boxX = labelX - paddingX;
     const boxY = labelY - fontSize - paddingY;
     const boxWidth = textWidth + paddingX * 2;
@@ -150,9 +153,9 @@ function createNodeHoverLabelDrawer(): NodeHoverDrawingFunction {
     const label = String(data.label);
     const paddingX = 7;
     const paddingY = 4;
-    const labelX = data.x + data.size + 5;
-    const labelY = data.y + fontSize / 3;
     const textWidth = context.measureText(label).width;
+    const labelX = data.x - textWidth / 2;
+    const labelY = data.y - data.size - 9;
     const boxX = labelX - paddingX;
     const boxY = labelY - fontSize - paddingY;
     const boxWidth = textWidth + paddingX * 2;
@@ -191,4 +194,3 @@ function drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
 }
-
