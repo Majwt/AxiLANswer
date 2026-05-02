@@ -119,6 +119,8 @@ export default function GraphView({ data, onSelectNode }: props) {
     if (!containerRef.current) return;
 
     const graph = createGraph(data);
+    let selectedNodeId: string | null = null;
+    let connectedNodeIds = new Set<string>();
 
 
 
@@ -130,6 +132,48 @@ export default function GraphView({ data, onSelectNode }: props) {
       labelColor: { color: textColor },
       defaultDrawNodeLabel: createNodeLabelDrawer(textColor, backgroundColor),
       defaultDrawNodeHover: createNodeHoverLabelDrawer(),
+      nodeReducer: (node, nodeData) => {
+        if (!selectedNodeId) return { ...nodeData };
+
+        const isConnected = connectedNodeIds.has(node);
+
+        if (!isConnected) {
+          return {
+            ...nodeData,
+            color: "#2a2f36",
+            highlighted: false,
+            forceLabel: false,
+            zIndex: 1,
+            size: Math.max(nodeData.size * 0.9, 6),
+          };
+        }
+
+        if (node === selectedNodeId) {
+          return {
+            ...nodeData,
+            highlighted: true,
+            forceLabel: true,
+            zIndex: 10,
+            size: nodeData.size * 1.3,
+          };
+        }
+
+        return {
+          ...nodeData,
+          zIndex: 1,
+        };
+      },
+      edgeReducer: (edge, edgeData) => {
+        if (!selectedNodeId) return { ...edgeData };
+
+        const [source, target] = graph.extremities(edge);
+        const isConnectedEdge = source === selectedNodeId || target === selectedNodeId;
+
+        return {
+          ...edgeData,
+          hidden: !isConnectedEdge,
+        };
+      },
     });
 
     // background grid
@@ -224,11 +268,18 @@ export default function GraphView({ data, onSelectNode }: props) {
     // --------------------------------
     //
     renderer.on("clickNode", ({ node }) => {
+      selectedNodeId = node;
+      connectedNodeIds = new Set([node]);
+      graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
+      renderer.refresh();
       const attrs = graph.getNodeAttributes(node) as NodeDetails;
       onSelectNode(node, attrs);
     });
 
     renderer.on("clickStage", () => {
+      selectedNodeId = null;
+      connectedNodeIds = new Set();
+      renderer.refresh();
       onSelectNode("", null);
     });
 
