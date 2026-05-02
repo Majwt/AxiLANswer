@@ -15,7 +15,6 @@ export function createGraph(data: GraphData) {
 
   groupedEdges.forEach((edge) => {
     if (!graph.hasNode(edge.source_fqdn) || !graph.hasNode(edge.target_fqdn)) {
-      console.log("edge skipped due to missing node:", edge);
       return;
     }
 
