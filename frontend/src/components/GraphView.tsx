@@ -158,7 +158,7 @@ export default function GraphView({ data, onSelectNode }: props) {
     else {
       // -- Enable force layout with fixed nodes --
       const layout = new ForceSupervisor(graph, {
-        isNodeFixed: (_, attr) => attr.highlighted, settings: {
+        isNodeFixed: (_, attr) => attr.fixed, settings: {
           attraction: 0.0005,
           repulsion: 0.2,
         },
