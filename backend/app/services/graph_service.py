@@ -1,58 +1,69 @@
-from os import path, read
+import pytds
+
+from app.config import get_settings
 from app.models.graph import Node, Edge, GraphResponse
 
+
+def get_query() -> str:
+    """
+    Should switch to procedure or view in the future, but for now this is fine
+    """
+
+    return"""
+    SELECT source_fqdn, source_ip, source_port, target_fqdn, target_ip, target_port, pid, process_name FROM inventory.connections
+    """
+
+
 def get_graph_data() -> GraphResponse:
+    settings = get_settings()
+    rows: list[dict] = []
+    with pytds.connect(
+        server=settings.mssql_host,
+        port=settings.mssql_port,
+        database=settings.mssql_database,
+        user=settings.mssql_user,
+        password=settings.mssql_password,
+        as_dict=True,
+    ) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(get_query())
+            rows = cursor.fetchall()
 
-    # TODO: Fetch from database instead of loading from file
-
-    with open("data.in", 'r', encoding='utf-8') as f:
-        raw_data = f.read()
-
-    # Because run_datetime contains a space, parse manually
-    lines = raw_data.strip().splitlines()
-    rows = []
-    
-    for line in lines[1:]:
-        parts = line.split()
-    
-        rows.append({
-            "run_datetime": f"{parts[0]} {parts[1]}",
-            "host_name": parts[2],
-            "direction": parts[3],
-            "source_fqdn": parts[4],
-            "source_ip": parts[5],
-            "source_port": int(parts[6]),
-            "target_fqdn": parts[7],
-            "target_ip": parts[8],
-            "target_port": int(parts[9]),
-        })
-    
-    
     nodes_by_ip: dict[str, Node] = {}
     edges: list[Edge] = []
-    
+
     for i, row in enumerate(rows, start=1):
-        nodes_by_ip[row["source_ip"]] = Node(
-            fqdn=row["source_fqdn"],
-            ip=row["source_ip"],
+        source_ip = str(row["source_ip"])
+        target_ip = str(row["target_ip"])
+        source_fqdn = row.get("source_fqdn") or source_ip
+        target_fqdn = row.get("target_fqdn") or target_ip
+        pid = int(row.get("pid") or -1)
+        process_name = str(row.get("process_name") or "")
+
+        nodes_by_ip[source_ip] = Node(
+            fqdn=source_fqdn,
+            ip=source_ip,
         )
-    
-        nodes_by_ip[row["target_ip"]] = Node(
-            fqdn=row["target_fqdn"],
-            ip=row["target_ip"],
+
+        nodes_by_ip[target_ip] = Node(
+            fqdn=target_fqdn,
+            ip=target_ip,
         )
-    
-        edges.append(Edge(
-            id=f"edge-{i}",
-            source_ip=row["source_ip"],
-            source_port=row["source_port"],
-            source_fqdn=row["source_fqdn"],
-            target_ip=row["target_ip"],
-            target_port=row["target_port"],
-            target_fqdn=row["target_fqdn"],
-        ))
-    
-    
+
+        edges.append(
+            Edge(
+                id=f"edge-{i}",
+                source_ip=source_ip,
+                source_port=int(row["source_port"]),
+                source_fqdn=source_fqdn,
+                target_ip=target_ip,
+                target_port=int(row["target_port"]),
+                target_fqdn=target_fqdn,
+                pid=pid,
+                process_name=process_name,
+            )
+        )
+
     nodes = list(nodes_by_ip.values())
 
     return GraphResponse(nodes=nodes, edges=edges)
