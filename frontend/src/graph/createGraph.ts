@@ -1,19 +1,25 @@
 import Graph from "graphology";
 import type { GraphData, NodeDetails } from "../types/graph";
+import type { filter } from "../types/filter";
 import { addNodes } from "./addNodes";
 import { addEdges } from "./addEdges";
 import { setupCurvedEdges } from "./setupCurvedEdges";
 import Sigma from "sigma";
 import { EdgeCurvedArrowProgram } from "@sigma/edge-curve";
 import { EdgeArrowProgram, type NodeHoverDrawingFunction, type NodeLabelDrawingFunction } from "sigma/rendering";
+import { matchesEdgeFilters } from "../filters/matchesFilter";
 
 /**
  * Creates a Graphology graph from the given GraphData.
  *
  * @param data - The graph data containing nodes and edges.
+ * @param onSelectNode - Callback function triggered when a node is selected, providing the node ID and its attributes.
+ * @param filtersOrGetter - An array of filters or a function that returns an array of filters to determine which nodes and edges should be visible.
+ * @param colors - An object containing text and background colors for node labels.
+ * @returns A tuple containing the Sigma renderer instance and the Graphology graph instance.
  *
  */
-export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: string, attrs: NodeDetails | null) => void, data: GraphData, colors: { text: string, background: string }): [Sigma, Graph] {
+export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: string, attrs: NodeDetails | null) => void, data: GraphData, filtersOrGetter: filter[] | (() => filter[]), colors: { text: string, background: string }): [Sigma, Graph] {
   const graph = new Graph({
     multi: true,
     type: "directed",
@@ -26,6 +32,9 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
   setupCurvedEdges(graph);
   let selectedNodeId: string | null = null;
   let connectedNodeIds = new Set<string>();
+  const getFilters = typeof filtersOrGetter === "function"
+    ? filtersOrGetter
+    : () => filtersOrGetter;
 
   const renderer = new Sigma(graph, containerRef, {
     zIndex: true,
@@ -38,9 +47,13 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
     labelColor: { color: colors.text },
     defaultDrawNodeLabel: createNodeLabelDrawer(colors.text, colors.background),
     defaultDrawNodeHover: createNodeHoverLabelDrawer(),
-    nodeReducer: (node, nodeData) => nodeReducer(node, connectedNodeIds, selectedNodeId, nodeData),
+    nodeReducer: (node, nodeData) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, nodeData, getFilters()),
     edgeReducer: (edge, edgeData) => {
-      if (!selectedNodeId) return { ...edgeData };
+      if (!edgeMatchesFilters(graph, edge, getFilters())) {
+        return { ...edgeData, hidden: true };
+      }
+
+      if (!selectedNodeId) return { ...edgeData, hidden: false };
 
       const [source, target] = graph.extremities(edge);
       const isConnectedEdge = source === selectedNodeId || target === selectedNodeId;
@@ -72,7 +85,11 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
   return [renderer, graph];
 }
 
-function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: Record<string, unknown>) {
+function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: Record<string, unknown>, filters: filter[]) {
+  if (!nodeHasVisibleEdge(node, graph, filters)) {
+    return { ...nodeData, hidden: true };
+  }
+
   if (!selectedNodeId) return { ...nodeData };
 
   const nodeSize = typeof nodeData.size === "number" ? nodeData.size : 6;
@@ -106,6 +123,20 @@ function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId
     zIndex: 9,
   };
 
+}
+
+function nodeHasVisibleEdge(node: string, graph: Graph, filters: filter[]) {
+  return graph.edges(node).some((edge) => edgeMatchesFilters(graph, edge, filters));
+}
+
+function edgeMatchesFilters(graph: Graph, edge: string, filters: filter[]) {
+  const [source, target] = graph.extremities(edge);
+  const sourceNode = graph.getNodeAttributes(source) as NodeDetails;
+  const targetNode = graph.getNodeAttributes(target) as NodeDetails;
+  const edgeData = graph.getEdgeAttributes(edge) as { connections?: unknown };
+  const connections = Array.isArray(edgeData.connections) ? edgeData.connections as GraphData["edges"] : [];
+
+  return matchesEdgeFilters({ sourceNode, targetNode, connections }, filters);
 }
 
 

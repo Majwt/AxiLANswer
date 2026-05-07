@@ -1,0 +1,53 @@
+.filter-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.75rem;
+  background: rgba(15, 18, 25, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.filter-bracket {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.filter-text {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.filter-select,
+.filter-input {
+  min-height: 1.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.45rem;
+  background: rgba(8, 12, 18, 0.9);
+  color: inherit;
+  padding: 0.15rem 0.4rem;
+}
+
+.filter-select.include {
+  border-color: rgba(68, 193, 110, 0.65);
+}
+
+.filter-select.exclude {
+  border-color: rgba(220, 85, 85, 0.7);
+}
+
+.filter-input {
+  width: 8rem;
+}
+
+.filter-remove {
+  margin-left: 0.4rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(150, 47, 47, 0.25);
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+}

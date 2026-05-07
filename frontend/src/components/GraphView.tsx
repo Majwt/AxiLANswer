@@ -6,12 +6,14 @@ import type { GraphData, NodeDetails } from "../types/graph.ts";
 import { createGraph } from "../graph/createGraph.ts";
 import ForceSupervisor from "graphology-layout-force/worker";
 import type Graph from "graphology";
+import type { filter } from "../types/filter.ts";
 // import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
 import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
 
 type props = {
   data: GraphData;
+  filters: filter[];
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
 };
 
@@ -23,9 +25,11 @@ type props = {
  * @param {(node: string, attrs: NodeDetails | null) => void} onSelectNode - Callback function triggered when a node is selected, providing the node ID and its attributes.
  *
  */
-export default function GraphView({ data, onSelectNode }: props) {
+export default function GraphView({ data, filters, onSelectNode }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const rendererRef = useRef<Sigma | null>(null);
+  const filtersRef = useRef<filter[]>(filters);
 
 
   const textColor = getComputedStyle(document.documentElement)
@@ -36,16 +40,23 @@ export default function GraphView({ data, onSelectNode }: props) {
     .trim();
 
   useEffect(() => {
+    filtersRef.current = filters;
+    rendererRef.current?.refresh();
+  }, [filters]);
+
+  useEffect(() => {
     if (!containerRef.current) return;
 
     const [renderer, graph] = createGraph(
       containerRef.current,
       onSelectNode,
       data,
+      () => filtersRef.current,
       {
         text: textColor,
         background: backgroundColor
       });
+    rendererRef.current = renderer;
 
     const backgroundCleanup = setupBackgroundGrid(renderer, containerRef.current, gridRef);
     // layout
@@ -55,9 +66,9 @@ export default function GraphView({ data, onSelectNode }: props) {
       backgroundCleanup();
       layoutCleanup();
       renderer.kill();
+      rendererRef.current = null;
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, textColor, backgroundColor]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
