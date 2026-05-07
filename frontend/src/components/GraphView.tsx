@@ -1,6 +1,6 @@
 
 import "./GraphView.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sigma from "sigma";
 import type { GraphData, NodeDetails } from "../types/graph.ts";
 import { createGraph } from "../graph/createGraph.ts";
@@ -10,6 +10,8 @@ import type { filter } from "../types/filter.ts";
 // import forceAtlas2 from "graphology-layout-forceatlas2";
 import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
 import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
+import { nodeReducer } from "../graph/nodeReducer.ts";
+import { edgeReducer } from "../graph/edgeReducer.ts";
 
 type props = {
   data: GraphData;
@@ -29,7 +31,11 @@ export default function GraphView({ data, filters, onSelectNode }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<Sigma | null>(null);
-  const filtersRef = useRef<filter[]>(filters);
+  const graphRef = useRef<Graph | null>(null);
+
+
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set());
 
 
   const textColor = getComputedStyle(document.documentElement)
@@ -40,23 +46,20 @@ export default function GraphView({ data, filters, onSelectNode }: props) {
     .trim();
 
   useEffect(() => {
-    filtersRef.current = filters;
-    rendererRef.current?.refresh();
-  }, [filters]);
-
-  useEffect(() => {
     if (!containerRef.current) return;
 
     const [renderer, graph] = createGraph(
       containerRef.current,
-      onSelectNode,
       data,
-      () => filtersRef.current,
       {
         text: textColor,
         background: backgroundColor
       });
     rendererRef.current = renderer;
+    graphRef.current = graph;
+
+    setupGraphEvents(renderer, graph, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
+
 
     const backgroundCleanup = setupBackgroundGrid(renderer, containerRef.current, gridRef);
     // layout
@@ -67,11 +70,47 @@ export default function GraphView({ data, filters, onSelectNode }: props) {
       layoutCleanup();
       renderer.kill();
       rendererRef.current = null;
+      graphRef.current = null;
     }
 
-  }, [data, textColor, backgroundColor]);
+  }, [data, textColor, backgroundColor, onSelectNode]);
+
+  useEffect(() => {
+    if (!rendererRef.current || !graphRef.current) return;
+    setupReducers(rendererRef.current, graphRef.current, selectedNodeId, connectedNodeIds, filters);
+  }, [selectedNodeId, connectedNodeIds, filters]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
+}
+
+
+function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, connectedNodeIds: Set<string>, filters: filter[]) {
+  renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, data, filters));
+  renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", filters));
+  renderer.refresh();
+
+}
+
+function setupGraphEvents(renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void) {
+
+  renderer.on("clickNode", ({ node }) => {
+    const connectedNodeIds = new Set([node]);
+    graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
+    setSelectedNodeId(node);
+    setConnectedNodeIds(connectedNodeIds);
+    renderer.refresh();
+    const attrs = graph.getNodeAttributes(node) as NodeDetails;
+    onSelectNode(node, attrs);
+
+  });
+
+  renderer.on("clickStage", () => {
+    setSelectedNodeId(null);
+    setConnectedNodeIds(new Set());
+    renderer.refresh();
+    onSelectNode("", null);
+  });
+
 }
 
 // function forceAtlas2Layout(graph: Graph) {

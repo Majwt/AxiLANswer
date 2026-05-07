@@ -1,6 +1,7 @@
 import { fuzzy } from "fast-fuzzy";
 import type { filter } from "../types/filter";
-import type { GraphEdge, NodeDetails } from "../types/graph";
+import type { GraphData, GraphEdge, NodeDetails } from "../types/graph";
+import type Graph from "graphology";
 
 export type EdgeFilterContext = {
   sourceNode: NodeDetails;
@@ -11,6 +12,17 @@ export type EdgeFilterContext = {
 export function matchesEdgeFilters(edge: EdgeFilterContext, filters: filter[]): boolean {
   return filters.every((entry) => matchesEdgeFilter(edge, entry));
 }
+
+export function edgeMatchesFilters(graph: Graph, edge: string, filters: filter[]) {
+  const [source, target] = graph.extremities(edge);
+  const sourceNode = graph.getNodeAttributes(source) as NodeDetails;
+  const targetNode = graph.getNodeAttributes(target) as NodeDetails;
+  const edgeData = graph.getEdgeAttributes(edge) as { connections?: unknown };
+  const connections = Array.isArray(edgeData.connections) ? edgeData.connections as GraphData["edges"] : [];
+
+  return matchesEdgeFilters({ sourceNode, targetNode, connections }, filters);
+}
+
 
 function matchesEdgeFilter(edge: EdgeFilterContext, entry: filter): boolean {
   const value = entry.value.trim();

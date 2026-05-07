@@ -15,6 +15,7 @@ function App() {
   const [data, setData] = useState<GraphData | null>(null);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
   const [filters, setFilters] = useState<filter[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const handleSelectNode = useCallback((_node: string, attrs: NodeDetails | null) => {
     setSelectedNode(attrs);
   }, []);
