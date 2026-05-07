@@ -1,0 +1,17 @@
+
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  margin: 0;
+}
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(20, 24, 31, 0.55);
+  color: inherit;
+}

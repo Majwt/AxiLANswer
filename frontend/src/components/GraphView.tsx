@@ -17,6 +17,7 @@ type props = {
   data: GraphData;
   filters: filter[];
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
+  searchQuery: string;
 };
 
 
@@ -25,9 +26,12 @@ type props = {
  *
  * @param {GraphData} data - The graph data containing nodes and edges to visualize.
  * @param {(node: string, attrs: NodeDetails | null) => void} onSelectNode - Callback function triggered when a node is selected, providing the node ID and its attributes.
+ * @param {filter[]} filters - An array of filter objects to apply to the graph visualization, allowing dynamic styling and visibility based on node and edge attributes.
+ * @param {string} searchQuery - The current search query string used to filter nodes and edges in the graph visualization.
+ * @returns {JSX.Element} The rendered GraphView component containing the graph visualization.
  *
  */
-export default function GraphView({ data, filters, onSelectNode }: props) {
+export default function GraphView({ data, filters, onSelectNode, searchQuery }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<Sigma | null>(null);
@@ -77,16 +81,25 @@ export default function GraphView({ data, filters, onSelectNode }: props) {
 
   useEffect(() => {
     if (!rendererRef.current || !graphRef.current) return;
-    setupReducers(rendererRef.current, graphRef.current, selectedNodeId, connectedNodeIds, filters);
-  }, [selectedNodeId, connectedNodeIds, filters]);
+    setupReducers(rendererRef.current, graphRef.current, selectedNodeId, connectedNodeIds, filters, searchQuery);
+  }, [selectedNodeId, connectedNodeIds, filters, searchQuery]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
 }
 
 
-function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, connectedNodeIds: Set<string>, filters: filter[]) {
-  renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, data, filters));
-  renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", filters));
+function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, connectedNodeIds: Set<string>, filters: filter[], searchQuery: string) {
+  const searchFilter: filter = {
+    id: "__search__",
+    type: "fqdn",
+    operation: "include",
+    value: searchQuery,
+  };
+  const effectiveFilters = searchQuery.trim()
+    ? [...filters, searchFilter]
+    : filters;
+  renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, data, effectiveFilters));
+  renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", effectiveFilters));
   renderer.refresh();
 
 }
