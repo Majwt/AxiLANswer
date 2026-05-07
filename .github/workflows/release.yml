@@ -1,0 +1,100 @@
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Zip frontend
+        run: |
+          cd dist
+          zip -r ../../mrview-frontend.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mrview-frontend
+          path: mrview-frontend.zip
+
+  build-backend:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - rid: win-x64
+            name: mrview-api-windows
+          - rid: linux-x64
+            name: mrview-api-linux
+
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish backend
+        run: |
+          dotnet publish -c Release -r ${{ matrix.rid }} \
+            --self-contained false \
+            -o ../publish/${{ matrix.name }}
+
+      - name: Zip backend
+        run: |
+          cd ../publish/${{ matrix.name }}
+          zip -r ../../${{ matrix.name }}.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.name }}.zip
+
+  release:
+    needs:
+      - build-frontend
+      - build-backend
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir release
+          find artifacts -name "*.zip" -exec cp {} release/ \;
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.zip
