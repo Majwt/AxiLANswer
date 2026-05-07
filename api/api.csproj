@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- EXE name -->
+    <AssemblyName>MrViewApi</AssemblyName>
+
+    <!-- Versioning -->
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+
+    <!-- Windows file properties -->
+    <Title>MrView API</Title>
+    <Product>MrView</Product>
+    <Description>Backend API for MrView network visualization</Description>
+    <Company>Axians</Company>
+    <Authors>Theodor Wase and Walter Almgren</Authors>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+  </ItemGroup>
+
+</Project>
