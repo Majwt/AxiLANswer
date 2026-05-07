@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import GraphView from './components/GraphView'
 import brand from "./config/brand";
 import type { GraphData, NodeDetails } from './types/graph';
@@ -17,9 +17,30 @@ function App() {
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
   const [filters, setFilters] = useState<filter[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchSelection, setSearchSelection] = useState<string>("");
+  const [searchSelectionVersion, setSearchSelectionVersion] = useState(0);
+  const searchSuggestions = useMemo(() => {
+    if (!data) return [];
+
+    const nodeNames = new Set<string>();
+
+    for (const node of data.nodes) nodeNames.add(node.fqdn);
+    for (const edge of data.edges) {
+      nodeNames.add(edge.source_fqdn);
+      nodeNames.add(edge.target_fqdn);
+    }
+
+    return [...nodeNames].sort((a, b) => a.localeCompare(b));
+  }, [data]);
 
   const handleSelectNode = useCallback((_node: string, attrs: NodeDetails | null) => {
     setSelectedNode(attrs);
+  }, []);
+
+  const handleSearchSubmit = useCallback((query: string) => {
+    if (!query) return;
+    setSearchSelection(query);
+    setSearchSelectionVersion((version) => version + 1);
   }, []);
 
   // load graph on initial render
@@ -42,13 +63,13 @@ function App() {
     <main className="app">
       <section className="app-content">
         <div className="graphview-shell">
-          {data ? <GraphView data={data} filters={filters} onSelectNode={handleSelectNode} searchQuery={searchQuery} /> : <p className="graphview-loading">Loading graph...</p>}
+          {data ? <GraphView data={data} filters={filters} onSelectNode={handleSelectNode} searchQuery={searchQuery} searchSelection={searchSelection} searchSelectionVersion={searchSelectionVersion} /> : <p className="graphview-loading">Loading graph...</p>}
         </div>
         <div className="graphview-overlay">
           <AppHeader />
-          <NodeDetailsPanel node={selectedNode} />
+          <NodeDetailsPanel node={selectedNode} filters={filters} searchQuery={searchQuery} />
           <div className="filter-container">
-            <SearchBar query={searchQuery} setQuery={setSearchQuery} />
+            <SearchBar query={searchQuery} setQuery={setSearchQuery} suggestions={searchSuggestions} onSubmit={handleSearchSubmit} />
             <Filters filters={filters} setFilters={setFilters} />
           </div>
           <span className="version-info">{"v0.0.0"}</span>

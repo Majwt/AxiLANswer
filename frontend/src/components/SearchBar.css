@@ -1,6 +1,7 @@
 
 
 .search-bar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: left;
@@ -8,10 +9,22 @@
 }
 .search-input {
   width: 100%;
-  max-width: 400px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 2rem 0.5rem 1rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: rgba(20, 24, 31, 0.55);
   color: inherit;
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 0.6rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
 }

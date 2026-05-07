@@ -1,5 +1,6 @@
 import "./FilterItem.css";
 import type { FilterOperation, FilterType, filter } from "../types/filter.ts";
+import { SERVICE_FILTER_OPTIONS } from "../utils/portServices.ts";
 
 type props = {
   filter: filter;
@@ -25,23 +26,42 @@ function FilterItem({ filter, onChange, onRemove }: props) {
       <select
         className="filter-select"
         value={filter.type}
-        onChange={(event) => onChange(filter.operation, event.target.value as FilterType, filter.value)}
+        onChange={(event) => {
+          const nextType = event.target.value as FilterType;
+          const nextValue = nextType === "service" ? "" : filter.value;
+          onChange(filter.operation, nextType, nextValue);
+        }}
       >
+        <option value="service">service</option>
         <option value="port">port</option>
         <option value="fqdn">fqdn</option>
         <option value="ip">ip</option>
         <option value="process">process</option>
         <option value="subnet">subnet</option>
-        <option value="service">service</option>
       </select>
       <span className="filter-text"> is </span>
-      <input
-        className="filter-input"
-        type={valueInputType}
-        value={filter.value}
-        placeholder={valuePlaceholder}
-        onChange={(event) => onChange(filter.operation, filter.type, event.target.value)}
-      />
+      {filter.type === "service" ? (
+        <select
+          className="filter-select"
+          value={filter.value}
+          onChange={(event) => onChange(filter.operation, filter.type, event.target.value)}
+        >
+          <option value="">Select service</option>
+          {SERVICE_FILTER_OPTIONS.map((serviceName) => (
+            <option key={serviceName} value={serviceName}>
+              {serviceName}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          className="filter-input"
+          type={valueInputType}
+          value={filter.value}
+          placeholder={valuePlaceholder}
+          onChange={(event) => onChange(filter.operation, filter.type, event.target.value)}
+        />
+      )}
       <button type="button" className="filter-remove" onClick={onRemove} aria-label="Remove filter">
         ×
       </button>

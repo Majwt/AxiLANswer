@@ -81,10 +81,45 @@
   text-align: left;
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border);
+  vertical-align: middle;
 }
 
 #no-node-selected {
   user-select: none;
   pointer-events: none;
 
+}
+
+.direction-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+}
+
+.direction-pill.outgoing {
+  background: rgba(73, 130, 255, 0.15);
+  border-color: rgba(73, 130, 255, 0.45);
+}
+
+.direction-pill.incoming {
+  background: rgba(90, 201, 146, 0.15);
+  border-color: rgba(90, 201, 146, 0.45);
+}
+
+.direction-glyph {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.port-service {
+  border-bottom: 1px dashed color-mix(in oklab, var(--text-h) 55%, transparent);
+  cursor: help;
+}
+
+.port-service.dynamic {
+  color: color-mix(in oklab, var(--text-h) 86%, #ffb26b);
 }

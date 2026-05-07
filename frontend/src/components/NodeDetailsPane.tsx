@@ -1,15 +1,40 @@
 import "./NodeDetailsPane.css";
-import { useState } from "react";
-import type { NodeDetails } from "../types/graph";
+import { useMemo, useState } from "react";
+import { buildEffectiveFilters, matchesNodeConnectionFilters } from "../filters/matchesFilter";
+import type { filter } from "../types/filter";
+import type { NodeDetails, NodePortTarget } from "../types/graph";
+import { getServiceName, isDynamicPort } from "../utils/portServices";
 
 type Props = {
   node: NodeDetails | null;
+  filters: filter[];
+  searchQuery: string;
 };
 
 type PaneMode = "auto" | "minimized";
 
-export default function NodeDetailsPanel({ node }: Props) {
+function renderPortService(port: number) {
+  const label = getServiceName(port);
+  return (
+    <span className={`port-service ${isDynamicPort(port) ? "dynamic" : ""}`} title={`Port ${port}`}>
+      {label}
+    </span>
+  );
+}
+
+function getDirectionMeta(target: NodePortTarget) {
+  return target.direction === "outgoing"
+    ? { glyph: "↗", label: "Outgoing" }
+    : { glyph: "↘", label: "Incoming" };
+}
+
+export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) {
   const [paneMode, setPaneMode] = useState<PaneMode>("auto");
+  const effectiveFilters = useMemo(() => buildEffectiveFilters(filters, searchQuery), [filters, searchQuery]);
+  const visibleTargets = useMemo(() => {
+    if (!node) return [];
+    return node.portTargets.filter((target) => matchesNodeConnectionFilters(node, target, effectiveFilters));
+  }, [node, effectiveFilters]);
 
   return (
     <aside className={`details-panel ${paneMode}`}>
@@ -34,31 +59,36 @@ export default function NodeDetailsPanel({ node }: Props) {
               <p>{node.ip}</p>
               <p>{node.subnet}</p>
               <h3>Connections</h3>
-              {node.portTargets.length > 0 ? (
+              {visibleTargets.length > 0 ? (
                 <table className="details-table">
                   <thead>
                     <tr>
-                      <th>Port</th>
+                      <th>Direction</th>
+                      <th>Service</th>
                       <th>FQDN</th>
-                      <th>To Port</th>
-                      <th>PID</th>
+                      <th>Peer Service</th>
                       <th>Process</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {node.portTargets.map((target) => (
-                      <tr key={`${target.port}-${target.remote_port}-${target.fqdn}-${target.pid}-${target.processName ?? ""}`}>
-                        <td>{target.port}</td>
+                    {visibleTargets.map((target) => (
+                      <tr key={`${target.port}-${target.remote_port}-${target.fqdn}-${target.ip}-${target.direction}-${target.pid}-${target.processName ?? ""}`}>
+                        <td>
+                          <span className={`direction-pill ${target.direction}`} title={getDirectionMeta(target).label}>
+                            <span className="direction-glyph" aria-hidden="true">{getDirectionMeta(target).glyph}</span>
+                            {getDirectionMeta(target).label}
+                          </span>
+                        </td>
+                        <td>{renderPortService(target.port)}</td>
                         <td>{target.fqdn}</td>
-                        <td>{target.remote_port}</td>
-                        <td>{target.pid > 0 ? target.pid : "-"}</td>
+                        <td>{renderPortService(target.remote_port)}</td>
                         <td>{target.processName ?? "-"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <p>No connections found.</p>
+                <p>No connections match current filters.</p>
               )}
             </>
           ) : (

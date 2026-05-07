@@ -12,12 +12,15 @@ import type { SigmaNodeEventPayload, MouseCoords } from "sigma/types";
 import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
 import { nodeReducer } from "../graph/nodeReducer.ts";
 import { edgeReducer } from "../graph/edgeReducer.ts";
+import { buildEffectiveFilters } from "../filters/matchesFilter.ts";
 
 type props = {
   data: GraphData;
   filters: filter[];
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
   searchQuery: string;
+  searchSelection: string;
+  searchSelectionVersion: number;
 };
 
 
@@ -31,7 +34,7 @@ type props = {
  * @returns {JSX.Element} The rendered GraphView component containing the graph visualization.
  *
  */
-export default function GraphView({ data, filters, onSelectNode, searchQuery }: props) {
+export default function GraphView({ data, filters, onSelectNode, searchQuery, searchSelection, searchSelectionVersion }: props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<Sigma | null>(null);
@@ -84,20 +87,19 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery }: 
     setupReducers(rendererRef.current, graphRef.current, selectedNodeId, connectedNodeIds, filters, searchQuery);
   }, [selectedNodeId, connectedNodeIds, filters, searchQuery]);
 
+  useEffect(() => {
+    if (!searchSelection || !rendererRef.current || !graphRef.current) return;
+    if (!graphRef.current.hasNode(searchSelection)) return;
+
+    selectNode(searchSelection, rendererRef.current, graphRef.current, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
+  }, [searchSelection, searchSelectionVersion, onSelectNode]);
+
   return <div ref={containerRef} className="graphview-canvas" />;
 }
 
 
 function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, connectedNodeIds: Set<string>, filters: filter[], searchQuery: string) {
-  const searchFilter: filter = {
-    id: "__search__",
-    type: "fqdn",
-    operation: "include",
-    value: searchQuery,
-  };
-  const effectiveFilters = searchQuery.trim()
-    ? [...filters, searchFilter]
-    : filters;
+  const effectiveFilters = buildEffectiveFilters(filters, searchQuery);
   renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, data, effectiveFilters));
   renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", effectiveFilters));
   renderer.refresh();
@@ -107,14 +109,7 @@ function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | n
 function setupGraphEvents(renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void) {
 
   renderer.on("clickNode", ({ node }) => {
-    const connectedNodeIds = new Set([node]);
-    graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
-    setSelectedNodeId(node);
-    setConnectedNodeIds(connectedNodeIds);
-    renderer.refresh();
-    const attrs = graph.getNodeAttributes(node) as NodeDetails;
-    onSelectNode(node, attrs);
-
+    selectNode(node, renderer, graph, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
   });
 
   renderer.on("clickStage", () => {
@@ -124,6 +119,16 @@ function setupGraphEvents(renderer: Sigma, graph: Graph, setSelectedNodeId: (nod
     onSelectNode("", null);
   });
 
+}
+
+function selectNode(node: string, renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void) {
+  const connectedNodeIds = new Set([node]);
+  graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
+  setSelectedNodeId(node);
+  setConnectedNodeIds(connectedNodeIds);
+  renderer.refresh();
+  const attrs = graph.getNodeAttributes(node) as NodeDetails;
+  onSelectNode(node, attrs);
 }
 
 // function forceAtlas2Layout(graph: Graph) {

@@ -12,7 +12,7 @@ function Filters({ filters, setFilters }: Props) {
   const addFilter = () => {
     setFilters([
       ...filters,
-      { id: crypto.randomUUID(), type: "port", operation: "include", value: "" },
+      { id: crypto.randomUUID(), type: "service", operation: "include", value: "" },
     ]);
   };
 

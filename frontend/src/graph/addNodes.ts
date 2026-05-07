@@ -1,9 +1,9 @@
 import Graph from "graphology";
 import type { GraphData } from "../types/graph";
-import type { NodeDetails } from "../types/graph";
+import type { NodeDetails, NodePortTarget } from "../types/graph";
 import type { GraphEdge } from "../types/graph";
 
-type PortTarget = NodeDetails["portTargets"][number];
+type PortTarget = NodePortTarget;
 
 function getNodeSize(connectionCount: number): number {
   const baseSize = 10;
@@ -38,7 +38,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       index.set(ownerFqdn, entry);
     }
 
-    const key = `${target.port}->${target.remote_port}->${target.fqdn}->${target.pid}->${target.processName ?? ""}`;
+    const key = `${target.port}->${target.remote_port}->${target.fqdn}->${target.ip}->${target.direction}->${target.pid}->${target.processName ?? ""}`;
     if (entry.seen.has(key)) return;
 
     entry.seen.add(key);
@@ -53,6 +53,8 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       port: edge.source_port,
       remote_port: edge.target_port,
       fqdn: edge.target_fqdn,
+      ip: edge.target_ip,
+      direction: "outgoing",
       pid,
       processName,
     });
@@ -61,6 +63,8 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       port: edge.target_port,
       remote_port: edge.source_port,
       fqdn: edge.source_fqdn,
+      ip: edge.source_ip,
+      direction: "incoming",
       pid,
       processName,
     });
@@ -72,6 +76,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       a.port - b.port
       || a.remote_port - b.remote_port
       || a.fqdn.localeCompare(b.fqdn)
+      || a.direction.localeCompare(b.direction)
       || a.pid - b.pid
       || (a.processName ?? "").localeCompare(b.processName ?? "")
     );
