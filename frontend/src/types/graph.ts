@@ -20,6 +20,15 @@ export type GraphData = {
   edges: GraphEdge[];
 };
 
+export type EdgeDetails = {
+  id: string;
+  source_fqdn: string;
+  source_ip: string;
+  target_fqdn: string;
+  target_ip: string;
+  connections: GraphEdge[];
+};
+
 export type NodePortTarget = {
   port: number;
   remote_port: number;

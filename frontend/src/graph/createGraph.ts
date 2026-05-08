@@ -29,6 +29,7 @@ export function createGraph(containerRef: HTMLDivElement, data: GraphData, color
 
   const renderer = new Sigma(graph, containerRef, {
     zIndex: true,
+    enableEdgeEvents: true,
     defaultEdgeType: "straight",
     edgeProgramClasses: {
       straight: EdgeArrowProgram,

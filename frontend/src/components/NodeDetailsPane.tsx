@@ -1,12 +1,13 @@
 import "./NodeDetailsPane.css";
 import { useMemo, useState } from "react";
-import { buildEffectiveFilters, matchesNodeConnectionFilters } from "../filters/matchesFilter";
+import { buildEffectiveFilters, matchesEdgeFilters, matchesNodeConnectionFilters } from "../filters/matchesFilter";
 import type { filter } from "../types/filter";
-import type { NodeDetails, NodePortTarget } from "../types/graph";
+import type { EdgeDetails, NodeDetails, NodePortTarget } from "../types/graph";
 import { getServiceName, isDynamicPort } from "../utils/portServices";
 
 type Props = {
   node: NodeDetails | null;
+  edge: EdgeDetails | null;
   filters: filter[];
   searchQuery: string;
 };
@@ -46,13 +47,42 @@ function getDirectionMeta(target: NodePortTarget) {
     : { glyph: "↘", label: "Incoming" };
 }
 
-export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) {
+export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: Props) {
   const [paneMode, setPaneMode] = useState<PaneMode>("auto");
   const effectiveFilters = useMemo(() => buildEffectiveFilters(filters, searchQuery), [filters, searchQuery]);
   const visibleTargets = useMemo(() => {
     if (!node) return [];
     return node.portTargets.filter((target) => matchesNodeConnectionFilters(node, target, effectiveFilters));
   }, [node, effectiveFilters]);
+  const visibleEdgeConnections = useMemo(() => {
+    if (!edge) return [];
+    const sourceNode: NodeDetails = {
+      label: edge.source_fqdn,
+      ip: edge.source_ip,
+      fqdn: edge.source_fqdn,
+      color: "",
+      subnet: "",
+      portTargets: [],
+      size: 0,
+      x: 0,
+      y: 0,
+    };
+    const targetNode: NodeDetails = {
+      label: edge.target_fqdn,
+      ip: edge.target_ip,
+      fqdn: edge.target_fqdn,
+      color: "",
+      subnet: "",
+      portTargets: [],
+      size: 0,
+      x: 0,
+      y: 0,
+    };
+
+    return edge.connections.filter((connection) =>
+      matchesEdgeFilters({ sourceNode, targetNode, connections: [connection] }, effectiveFilters),
+    );
+  }, [edge, effectiveFilters]);
 
   return (
     <aside className={`details-panel ${paneMode}`}>
@@ -120,8 +150,48 @@ export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) 
                 <p>No connections match current filters.</p>
               )}
             </div>
+          ) : edge ? (
+            <div className="details-node-info">
+              <header className="details-header">
+                <span className="details-header-fqdn">{edge.source_fqdn} → {edge.target_fqdn}</span>
+                <div className="details-header-subtitle">
+                  <span className="details-header-ip">{edge.source_ip} → {edge.target_ip}</span>
+                </div>
+                <button
+                  type="button"
+                  className="details-minimize-button"
+                  onClick={() => setPaneMode("minimized")}
+                  title="Minimize details pane"
+                  aria-label="Minimize details pane"
+                >
+                  <span aria-hidden="true">▾</span>
+                </button>
+              </header>
+              {visibleEdgeConnections.length > 0 ? (
+                <table className="details-table">
+                  <thead>
+                    <tr>
+                      <th>Source Service</th>
+                      <th>Target Service</th>
+                      <th>Process</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleEdgeConnections.map((connection, index) => (
+                      <tr key={`${edge.id}-${connection.source_port}-${connection.target_port}-${connection.pid ?? 0}-${connection.process_name ?? ""}-${index}`}>
+                        <td>{renderPortService(connection.source_port)}</td>
+                        <td>{renderPortService(connection.target_port)}</td>
+                        <td>{renderProcessName(connection.process_name ?? null, connection.pid ?? 0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>No connections match current filters.</p>
+              )}
+            </div>
           ) : (
-            <p id="no-node-selected">Select a node to see details.</p>
+            <p id="no-node-selected">Select a node or edge to see details.</p>
           )}
         </div>
       )}

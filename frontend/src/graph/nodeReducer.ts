@@ -2,12 +2,12 @@ import type Graph from "graphology";
 import type { filter } from "../types/filter";
 import { edgeMatchesFilters } from "../filters/matchesFilter";
 
-export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: Record<string, unknown>, filters: filter[]) {
+export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<string>, selectedNodeId: string | null, selectedEdgeId: string | null, nodeData: Record<string, unknown>, filters: filter[]) {
   if (!nodeHasVisibleEdge(node, graph, filters)) {
     return { ...nodeData, hidden: true };
   }
 
-  if (!selectedNodeId) return { ...nodeData };
+  if (!selectedNodeId && !selectedEdgeId) return { ...nodeData };
 
   const nodeSize = typeof nodeData.size === "number" ? nodeData.size : 6;
   const isConnected = connectedNodeIds.has(node);
@@ -23,9 +23,10 @@ export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<st
     };
   }
 
-  if (node === selectedNodeId) {
+  if (selectedNodeId && node === selectedNodeId) {
     return {
       ...nodeData,
+      color: "#a20167",
       highlighted: true,
       forceLabel: true,
       zIndex: 10,

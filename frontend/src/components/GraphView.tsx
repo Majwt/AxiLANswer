@@ -2,7 +2,7 @@
 import "./GraphView.css";
 import { useEffect, useRef, useState, type JSX } from "react";
 import Sigma from "sigma";
-import type { GraphData, NodeDetails } from "../types/graph.ts";
+import type { EdgeDetails, GraphData, GraphEdge, NodeDetails } from "../types/graph.ts";
 import { createGraph } from "../graph/createGraph.ts";
 import ForceSupervisor from "graphology-layout-force/worker";
 import type Graph from "graphology";
@@ -19,11 +19,16 @@ type props = {
   data: GraphData;
   filters: filter[];
   onSelectNode: (node: string, attrs: NodeDetails | null) => void;
+  onSelectEdge: (edge: EdgeDetails | null) => void;
+  selectedEdgeId: string;
   searchQuery: string;
   searchSelection: string;
   searchSelectionVersion: number;
 };
 
+// Feels like this component is doing a lot, but I'm not sure how to split it without making the code more complicated.
+// Maybe the graph event handlers could be extracted to a custom hook? Or maybe the layout and background grid setup could be extracted to custom hooks? Not sure if it's worth it.
+// Too late now. 
 
 /**
  * GraphView component renders an interactive graph visualization using Sigma.js.
@@ -35,7 +40,7 @@ type props = {
  * @returns {JSX.Element} The rendered GraphView component containing the graph visualization.
  *
  */
-export default function GraphView({ data, filters, onSelectNode, searchQuery, searchSelection, searchSelectionVersion }: props): JSX.Element {
+export default function GraphView({ data, filters, onSelectNode, onSelectEdge, selectedEdgeId: initialSelectedEdgeId, searchQuery, searchSelection, searchSelectionVersion }: props): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<Sigma | null>(null);
@@ -43,7 +48,9 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery, se
 
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [connectedNodeIds, setConnectedNodeIds] = useState<Set<string>>(new Set());
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
 
 
   const textColor = getComputedStyle(document.documentElement)
@@ -66,14 +73,14 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery, se
     rendererRef.current = renderer;
     graphRef.current = graph;
 
-    setupGraphEvents(renderer, graph, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
-    setupReducers(renderer, graph, selectedNodeId, connectedNodeIds, filters, searchQuery);
+    setupGraphEvents(renderer, graph, setSelectedNodeId, setSelectedEdgeId, setConnectedNodeIds, setHoveredEdgeId, onSelectNode, onSelectEdge);
+    setupReducers(renderer, graph, selectedNodeId, selectedEdgeId, connectedNodeIds, hoveredEdgeId, filters, searchQuery);
 
 
     // background grid
     const backgroundCleanup = setupBackgroundGrid(renderer, containerRef.current, gridRef);
     // layout
-    const layoutCleanup = import.meta.env.VITE_LAYOUT_MOVE == 1 ? forceSupervisorLayout(renderer, graph) : forceAtlas2Layout(renderer, graph);
+    const layoutCleanup = forceSupervisorLayout(renderer, graph);
 
     return () => {
       backgroundCleanup();
@@ -84,55 +91,122 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery, se
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, textColor, backgroundColor, onSelectNode]);
+  }, [data, textColor, backgroundColor, onSelectNode, onSelectEdge]);
 
   useEffect(() => {
     if (!rendererRef.current || !graphRef.current) return;
-    setupReducers(rendererRef.current, graphRef.current, selectedNodeId, connectedNodeIds, filters, searchQuery);
-  }, [selectedNodeId, connectedNodeIds, filters, searchQuery]);
+    setupReducers(rendererRef.current, graphRef.current, selectedNodeId, selectedEdgeId, connectedNodeIds, hoveredEdgeId, filters, searchQuery);
+  }, [selectedNodeId, selectedEdgeId, connectedNodeIds, hoveredEdgeId, filters, searchQuery]);
 
   useEffect(() => {
     if (!searchSelection || !rendererRef.current || !graphRef.current) return;
     if (!graphRef.current.hasNode(searchSelection)) return;
 
-    selectNode(searchSelection, rendererRef.current, graphRef.current, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
-  }, [searchSelection, searchSelectionVersion, onSelectNode]);
+    selectNode(searchSelection, rendererRef.current, graphRef.current, setSelectedNodeId, setSelectedEdgeId, setConnectedNodeIds, onSelectNode, onSelectEdge);
+  }, [searchSelection, searchSelectionVersion, onSelectNode, onSelectEdge]);
+
+  useEffect(() => {
+    if (!graphRef.current) return;
+    if (!initialSelectedEdgeId) return;
+
+    if (!graphRef.current.hasEdge(initialSelectedEdgeId)) return;
+
+    selectEdge(initialSelectedEdgeId, graphRef.current, setSelectedNodeId, setSelectedEdgeId, setConnectedNodeIds, onSelectNode, onSelectEdge);
+  }, [initialSelectedEdgeId, onSelectNode, onSelectEdge]);
 
   return <div ref={containerRef} className="graphview-canvas" />;
 }
 
 
-function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, connectedNodeIds: Set<string>, filters: filter[], searchQuery: string) {
+function setupReducers(renderer: Sigma, graph: Graph, selectedNodeId: string | null, selectedEdgeId: string | null, connectedNodeIds: Set<string>, hoveredEdgeId: string | null, filters: filter[], searchQuery: string) {
   const effectiveFilters = buildEffectiveFilters(filters, searchQuery);
-  renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, data, effectiveFilters));
-  renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", effectiveFilters));
+  renderer.setSetting("nodeReducer", (node, data) => nodeReducer(node, graph, connectedNodeIds, selectedNodeId, selectedEdgeId, data, effectiveFilters));
+  renderer.setSetting("edgeReducer", (edge, data) => edgeReducer(graph, edge, data, selectedNodeId || "", selectedEdgeId, hoveredEdgeId, effectiveFilters));
   renderer.refresh();
 
 }
 
-function setupGraphEvents(renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void) {
+// Jag avskyr hur många parametrar dessa funktioner har
+function setupGraphEvents(renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setSelectedEdgeId: (edgeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, setHoveredEdgeId: (edgeId: string | null) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void, onSelectEdge: (edge: EdgeDetails | null) => void) {
 
   renderer.on("clickNode", ({ node }) => {
-    selectNode(node, renderer, graph, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
+    selectNode(node, renderer, graph, setSelectedNodeId, setSelectedEdgeId, setConnectedNodeIds, onSelectNode, onSelectEdge);
+  });
+
+  renderer.on("clickEdge", ({ edge }) => {
+    selectEdge(edge, graph, setSelectedNodeId, setSelectedEdgeId, setConnectedNodeIds, onSelectNode, onSelectEdge);
+  });
+
+  renderer.on("enterEdge", ({ edge }) => {
+    setHoveredEdgeId(edge);
+  });
+
+  renderer.on("leaveEdge", () => {
+    setHoveredEdgeId(null);
   });
 
   renderer.on("clickStage", () => {
     setSelectedNodeId(null);
+    setSelectedEdgeId(null);
     setConnectedNodeIds(new Set());
+    setHoveredEdgeId(null);
     renderer.refresh();
     onSelectNode("", null);
+    onSelectEdge(null);
   });
 
 }
 
-function selectNode(node: string, renderer: Sigma, graph: Graph, setSelectedNodeId: (nodeId: string | null) => void, setConnectedNodeIds: (nodeIds: Set<string>) => void, onSelectNode: (node: string, attrs: NodeDetails | null) => void) {
+// Jag avskyr hur många parametrar dessa funktioner har
+function selectNode(
+  node: string,
+  renderer: Sigma,
+  graph: Graph,
+  setSelectedNodeId: (nodeId: string | null) => void,
+  setSelectedEdgeId: (edgeId: string | null) => void,
+  setConnectedNodeIds: (nodeIds: Set<string>) => void,
+  onSelectNode: (node: string, attrs: NodeDetails | null) => void,
+  onSelectEdge: (edge: EdgeDetails | null) => void
+) {
+
   const connectedNodeIds = new Set([node]);
   graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
   setSelectedNodeId(node);
+  setSelectedEdgeId(null);
   setConnectedNodeIds(connectedNodeIds);
   renderer.refresh();
   const attrs = graph.getNodeAttributes(node) as NodeDetails;
   onSelectNode(node, attrs);
+  onSelectEdge(null);
+}
+
+function selectEdge(
+  edge: string,
+  graph: Graph,
+  setSelectedNodeId: (nodeId: string | null) => void,
+  setSelectedEdgeId: (edgeId: string | null) => void,
+  setConnectedNodeIds: (nodeIds: Set<string>) => void,
+  onSelectNode: (node: string, attrs: NodeDetails | null) => void,
+  onSelectEdge: (edge: EdgeDetails | null) => void
+) {
+  const [sourceNodeId, targetNodeId] = graph.extremities(edge);
+  const sourceNode = graph.getNodeAttributes(sourceNodeId) as NodeDetails;
+  const targetNode = graph.getNodeAttributes(targetNodeId) as NodeDetails;
+  const edgeAttributes = graph.getEdgeAttributes(edge) as { connections?: unknown };
+  const connections = Array.isArray(edgeAttributes.connections) ? edgeAttributes.connections as GraphEdge[] : [];
+
+  setSelectedNodeId(null);
+  setSelectedEdgeId(edge);
+  setConnectedNodeIds(new Set([sourceNodeId, targetNodeId]));
+  onSelectNode("", null);
+  onSelectEdge({
+    id: edge,
+    source_fqdn: sourceNode.fqdn,
+    source_ip: sourceNode.ip,
+    target_fqdn: targetNode.fqdn,
+    target_ip: targetNode.ip,
+    connections,
+  });
 }
 
 function forceAtlas2Layout(_renderer: Sigma, graph: Graph) {

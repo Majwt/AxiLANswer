@@ -3,6 +3,7 @@ import type { filter } from "../types/filter";
 export const FILTERS_QUERY_KEY = "filters";
 export const SEARCH_QUERY_KEY = "q";
 export const SELECTED_NODE_QUERY_KEY = "node";
+export const SELECTED_EDGE_QUERY_KEY = "edge";
 export const FILTERS_QUERY_COMPACT_PREFIX = "c:";
 export const FILTER_ENTRY_SEPARATOR = ",";
 
@@ -44,6 +45,11 @@ export function readInitialSearchQuery(): string {
 export function readInitialSelectedNodeId(): string {
   const params = new URLSearchParams(window.location.search);
   return params.get(SELECTED_NODE_QUERY_KEY) ?? "";
+}
+
+export function readInitialSelectedEdgeId(): string {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(SELECTED_EDGE_QUERY_KEY) ?? "";
 }
 
 export function readInitialFilters(): filter[] {
