@@ -4,15 +4,16 @@
   --text: oklch(0.45 0.02 270);
   --text-h: oklch(0.18 0.02 270);
   --border: oklch(0.9 0 0);
+  --primary: #246daa;
+  --primary-bg: color-mix(in oklab, var(--primary) 18%, transparent);
+  --primary-border: color-mix(in oklab, var(--primary) 45%, transparent);
+  --accent: #a20167;
+  --accent-bg: color-mix(in oklab, var(--accent) 16%, transparent);
+  --accent-border: color-mix(in oklab, var(--accent) 42%, transparent);
 
   /* surfaces */
   --code-bg: oklch(0.95 0 0);
   --social-bg: oklch(0.94 0 0 / 0.5);
-
-  /* accent  */
-  --accent: oklch(0.65 0.22 300);
-  --accent-bg: oklch(0.65 0.22 300 / 0.12);
-  --accent-border: oklch(0.65 0.22 300 / 0.4);
 
   /* shadows still need rgba */
   --shadow:
@@ -29,13 +30,15 @@
     --text: oklch(0.75 0.02 270);
     --text-h: oklch(0.92 0.02 270);
     --border: oklch(0.3 0.02 270);
+    --primary: #5fa9e6;
+    --primary-bg: color-mix(in oklab, var(--primary) 24%, transparent);
+    --primary-border: color-mix(in oklab, var(--primary) 56%, transparent);
+    --accent: #ff4ea9;
+    --accent-bg: color-mix(in oklab, var(--accent) 22%, transparent);
+    --accent-border: color-mix(in oklab, var(--accent) 58%, transparent);
 
     --code-bg: oklch(0.22 0.02 270);
     --social-bg: oklch(0.25 0.02 270 / 0.5);
-
-    --accent: oklch(0.75 0.18 300);
-    --accent-bg: oklch(0.75 0.18 300 / 0.15);
-    --accent-border: oklch(0.75 0.18 300 / 0.5);
 
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px,

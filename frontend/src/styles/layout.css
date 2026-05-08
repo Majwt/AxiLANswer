@@ -42,7 +42,7 @@
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  color: mix(var(--text-h), var(--bg), 0.8);
+  color: color-mix(in oklab, var(--primary) 65%, var(--text-h) 35%);
   z-index: 1000;
 }
 
@@ -52,7 +52,7 @@
   top: 2.2em;
   left: 10em;
   margin: 0;
-  color: mix(var(--text-h), var(--bg), 0.8);
+  color: color-mix(in oklab, var(--accent) 60%, var(--text-h) 40%);
   z-index: 1000;
 }
 
@@ -64,5 +64,4 @@
   display: flex;
   flex-direction: column;
   gap: 0.5em;
-
 }

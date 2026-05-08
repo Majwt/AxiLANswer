@@ -8,13 +8,13 @@
   align-self: flex-start;
   padding: 0.35rem 0.65rem;
   border-radius: 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(20, 24, 31, 0.55);
+  border: 1px solid var(--primary-border);
+  background: color-mix(in oklab, var(--primary-bg) 40%, rgba(20, 24, 31, 0.55));
   color: inherit;
   cursor: pointer;
 }
 
 .add-filter-button:hover {
-  border-color: rgba(121, 174, 255, 0.85);
-  background: rgba(28, 44, 78, 0.45);
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 55%, rgba(28, 44, 78, 0.45));
 }

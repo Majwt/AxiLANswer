@@ -87,8 +87,8 @@
   position: relative;
   padding: 0.7rem 0.9rem;
   padding-right: 2.8rem;
-  border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
-  background: color-mix(in oklab, var(--bg) 88%, #ffffff 12%);
+  border: 1px solid var(--primary-border);
+  background: color-mix(in oklab, var(--bg) 84%, var(--primary-bg) 16%);
   border-radius: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -100,7 +100,7 @@
 .details-header-fqdn {
   font-size: 1.1rem;
   font-weight: 650;
-  color: var(--text-h);
+  color: color-mix(in oklab, var(--text-h) 72%, var(--primary) 28%);
   letter-spacing: 0.01em;
   word-break: break-word;
 }
@@ -160,13 +160,13 @@
 }
 
 .direction-pill.outgoing {
-  background: rgba(73, 130, 255, 0.15);
-  border-color: rgba(73, 130, 255, 0.45);
+  background: var(--primary-bg);
+  border-color: var(--primary-border);
 }
 
 .direction-pill.incoming {
-  background: rgba(90, 201, 146, 0.15);
-  border-color: rgba(90, 201, 146, 0.45);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
 }
 
 .direction-glyph {

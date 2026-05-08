@@ -4,9 +4,9 @@
   flex-wrap: wrap;
   gap: 0.2rem;
   padding: 0.45rem 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--primary-border);
   border-radius: 0.75rem;
-  background: rgba(15, 18, 25, 0.58);
+  background: color-mix(in oklab, var(--primary-bg) 28%, rgba(15, 18, 25, 0.58));
   backdrop-filter: blur(10px);
 }
 
@@ -21,7 +21,7 @@
 .filter-select,
 .filter-input {
   min-height: 1.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--primary-border);
   border-radius: 0.45rem;
   background: rgba(8, 12, 18, 0.9);
   color: inherit;
@@ -29,11 +29,13 @@
 }
 
 .filter-select.include {
-  border-color: rgba(68, 193, 110, 0.65);
+  border-color: var(--primary-border);
+  background: color-mix(in oklab, var(--primary-bg) 45%, rgba(8, 12, 18, 0.9));
 }
 
 .filter-select.exclude {
-  border-color: rgba(220, 85, 85, 0.7);
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 55%, rgba(8, 12, 18, 0.9));
 }
 
 .filter-input {
@@ -44,9 +46,9 @@
   margin-left: 0.4rem;
   width: 1.7rem;
   height: 1.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--accent-border);
   border-radius: 50%;
-  background: rgba(150, 47, 47, 0.25);
+  background: var(--accent-bg);
   color: inherit;
   cursor: pointer;
   line-height: 1;
