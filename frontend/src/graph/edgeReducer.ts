@@ -1,6 +1,7 @@
 import type Graph from "graphology";
 import type { filter } from "../types/filter";
 import { edgeMatchesFilters } from "../filters/matchesFilter";
+import brand from "../config/brand";
 
 export function edgeReducer(graph: Graph, edge: string, edgeData: Record<string, unknown>, selectedNodeId: string, selectedEdgeId: string | null, hoveredEdgeId: string | null, filters: filter[]) {
 
@@ -24,14 +25,14 @@ export function edgeReducer(graph: Graph, edge: string, edgeData: Record<string,
     if (edge === selectedEdgeId) {
       reducedEdge = {
         ...reducedEdge,
-        color: "#a20167",
+        color: brand.colors.accentColor,
         size: Math.max(Number(edgeData.size ?? 1), 1) + 2,
         zIndex: 998,
       };
     } else {
       reducedEdge = {
         ...reducedEdge,
-        color: "#2a2f36",
+        color: brand.colors.reduceColor,
         size: Math.max(Number(edgeData.size ?? 1) * 0.55, 0.8),
         zIndex: 1,
       };
@@ -41,7 +42,7 @@ export function edgeReducer(graph: Graph, edge: string, edgeData: Record<string,
   if (hoveredEdgeId && edge === hoveredEdgeId) {
     return {
       ...reducedEdge,
-      color: "#a20167",
+      color: brand.colors.accentColor,
       size: Math.max(Number(edgeData.size ?? 1), 1) + 2,
       zIndex: 999,
     };

@@ -1,6 +1,7 @@
 import type Graph from "graphology";
 import type { filter } from "../types/filter";
 import { edgeMatchesFilters } from "../filters/matchesFilter";
+import brand from "../config/brand";
 
 export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<string>, selectedNodeId: string | null, selectedEdgeId: string | null, nodeData: Record<string, unknown>, filters: filter[]) {
   if (!nodeHasVisibleEdge(node, graph, filters)) {
@@ -15,7 +16,7 @@ export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<st
   if (!isConnected) {
     return {
       ...nodeData,
-      color: "#2a2f36",
+      color: brand.colors.reduceColor,
       highlighted: false,
       forceLabel: false,
       zIndex: 1,
@@ -26,7 +27,7 @@ export function nodeReducer(node: string, graph: Graph, connectedNodeIds: Set<st
   if (selectedNodeId && node === selectedNodeId) {
     return {
       ...nodeData,
-      color: "#a20167",
+      color: brand.colors.accentColor,
       highlighted: true,
       forceLabel: true,
       zIndex: 10,

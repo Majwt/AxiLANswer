@@ -1,8 +1,11 @@
 {
-  "name": "MrView",
-  "shortName": "MrView",
-  "NameWithLogo": "rView",
+  "name": "AxiLANswer",
+  "shortName": "AxiLANswer",
   "description": "Network connection visualization tool",
-  "themeColor": "#1e3a8a",
-  "backgroundColor": "#0f172a"
+  "colors": {
+    "themeColor": "#5fa9e6",
+    "accentColor": "#ff4ea9",
+    "backgroundColor": "#0f172a",
+    "reduceColor": "#2a2f36"
+  }
 }
