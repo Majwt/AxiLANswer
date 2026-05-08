@@ -31,12 +31,12 @@ jobs:
       - name: Zip frontend
         run: |
           cd dist
-          zip -r ../../mrview-frontend.zip .
+          zip -r ../axilanswer-frontend.zip .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mrview-frontend
-          path: mrview-frontend.zip
+          name: axilanswer-frontend
+          path: axilanswer-frontend.zip
 
   build-backend:
     runs-on: ubuntu-latest
@@ -45,9 +45,9 @@ jobs:
       matrix:
         include:
           - rid: win-x64
-            name: mrview-api-windows
+            name: axilanswer-api-windows
           - rid: linux-x64
-            name: mrview-api-linux
+            name: axilanswer-api-linux
 
     defaults:
       run:
@@ -76,7 +76,7 @@ jobs:
       - name: Zip backend
         run: |
           cd publish/${{ matrix.name }}
-          zip -r ../../${{ matrix.name }}.zip .
+          zip -r ../${{ matrix.name }}.zip .
 
       - uses: actions/upload-artifact@v4
         with:
@@ -101,7 +101,7 @@ jobs:
       - name: Prepare release files
         run: |
           mkdir release
-          find artifacts -name "*.zip" -exec cp {} release/ \;
+          find . -name "*.zip" -exec cp {} release/ \;
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
