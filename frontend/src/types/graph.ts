@@ -20,6 +20,25 @@ export type GraphData = {
   edges: GraphEdge[];
 };
 
+export type EdgeDetails = {
+  id: string;
+  source_fqdn: string;
+  source_ip: string;
+  target_fqdn: string;
+  target_ip: string;
+  connections: GraphEdge[];
+};
+
+export type NodePortTarget = {
+  port: number;
+  remote_port: number;
+  fqdn: string;
+  ip: string;
+  direction: "incoming" | "outgoing";
+  pid: number;
+  processName: string | null;
+};
+
 
 export type CombinedEdge = {
   id: string;
@@ -37,13 +56,7 @@ export type NodeDetails = {
   fqdn: string;
   color: string;
   subnet: string;
-  portTargets: {
-    port: number;
-    remote_port: number;
-    fqdn: string;
-    pid: number;
-    processName: string | null;
-  }[];
+  portTargets: NodePortTarget[];
   size: number;
   x: number;
   y: number;

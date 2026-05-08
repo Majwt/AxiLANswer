@@ -1,0 +1,20 @@
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.add-filter-button {
+  align-self: flex-start;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--primary-border);
+  background: color-mix(in oklab, var(--primary-bg) 40%, rgba(20, 24, 31, 0.55));
+  color: inherit;
+  cursor: pointer;
+}
+
+.add-filter-button:hover {
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 55%, rgba(28, 44, 78, 0.45));
+}

@@ -24,7 +24,9 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - run: npm ci
-      - run: npm run build
+      - run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VITE_APP_VERSION=$VERSION npm run build
 
       - name: Zip frontend
         run: |
@@ -60,10 +62,17 @@ jobs:
 
       - name: Publish backend
         run: |
-          dotnet publish -c Release -r ${{ matrix.rid }} \
-            --self-contained false \
-            -o ../publish/${{ matrix.name }}
+          VERSION="${GITHUB_REF_NAME#v}"
 
+          dotnet publish api \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained false \
+            -p:Version=$VERSION \
+            -p:AssemblyVersion=$VERSION.0 \
+            -p:FileVersion=$VERSION.0 \
+            -p:InformationalVersion=$GITHUB_REF_NAME \
+            -o publish/${{ matrix.name }}
       - name: Zip backend
         run: |
           cd ../publish/${{ matrix.name }}

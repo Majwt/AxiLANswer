@@ -185,8 +185,10 @@ ENV/
 env.bak/
 venv.bak/
 !.env.example
+.env.*
 
 appsettings.Development.json
+appsettings.Production.json
 
 # Spyder project settings
 .spyderproject

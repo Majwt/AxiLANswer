@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@sigma/edge-curve": "^3.1.0",
+    "fast-fuzzy": "^1.12.0",
     "graphology-layout-force": "^0.2.4",
     "graphology-layout-forceatlas2": "^0.10.1",
     "react": "^19.2.5",

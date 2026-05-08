@@ -1,5 +1,5 @@
 import Graph from "graphology";
-import type { GraphData, NodeDetails } from "../types/graph";
+import type { GraphData } from "../types/graph";
 import { addNodes } from "./addNodes";
 import { addEdges } from "./addEdges";
 import { setupCurvedEdges } from "./setupCurvedEdges";
@@ -11,9 +11,11 @@ import { EdgeArrowProgram, type NodeHoverDrawingFunction, type NodeLabelDrawingF
  * Creates a Graphology graph from the given GraphData.
  *
  * @param data - The graph data containing nodes and edges.
+ * @param colors - An object containing text and background colors for node labels.
+ * @returns A tuple containing the Sigma renderer instance and the Graphology graph instance.
  *
  */
-export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: string, attrs: NodeDetails | null) => void, data: GraphData, colors: { text: string, background: string }): [Sigma, Graph] {
+export function createGraph(containerRef: HTMLDivElement, data: GraphData, colors: { text: string, background: string }): [Sigma, Graph] {
   const graph = new Graph({
     multi: true,
     type: "directed",
@@ -24,89 +26,26 @@ export function createGraph(containerRef: HTMLDivElement, onSelectNode: (node: s
   addEdges(graph, data, true);
 
   setupCurvedEdges(graph);
-  let selectedNodeId: string | null = null;
-  let connectedNodeIds = new Set<string>();
 
   const renderer = new Sigma(graph, containerRef, {
     zIndex: true,
+    enableEdgeEvents: true,
     defaultEdgeType: "straight",
     edgeProgramClasses: {
       straight: EdgeArrowProgram,
       curvedArrow: EdgeCurvedArrowProgram,
       curved: EdgeCurvedArrowProgram,
     },
+    labelSize: 13,
     labelColor: { color: colors.text },
     defaultDrawNodeLabel: createNodeLabelDrawer(colors.text, colors.background),
     defaultDrawNodeHover: createNodeHoverLabelDrawer(),
-    nodeReducer: (node, nodeData) => nodeReducer(node, connectedNodeIds, selectedNodeId, nodeData),
-    edgeReducer: (edge, edgeData) => {
-      if (!selectedNodeId) return { ...edgeData };
-
-      const [source, target] = graph.extremities(edge);
-      const isConnectedEdge = source === selectedNodeId || target === selectedNodeId;
-
-      return {
-        ...edgeData,
-        hidden: !isConnectedEdge,
-      };
-    },
   });
 
-  renderer.on("clickNode", ({ node }) => {
-    selectedNodeId = node;
-    connectedNodeIds = new Set([node]);
-    graph.forEachNeighbor(node, (neighbor) => connectedNodeIds.add(neighbor));
-    renderer.refresh();
-    const attrs = graph.getNodeAttributes(node) as NodeDetails;
-    onSelectNode(node, attrs);
-
-  });
-
-  renderer.on("clickStage", () => {
-    selectedNodeId = null;
-    connectedNodeIds = new Set();
-    renderer.refresh();
-    onSelectNode("", null);
-  });
 
   return [renderer, graph];
 }
 
-function nodeReducer(node: string, connectedNodeIds: Set<string>, selectedNodeId: string | null, nodeData: Record<string, unknown>) {
-  if (!selectedNodeId) return { ...nodeData };
-
-  const nodeSize = typeof nodeData.size === "number" ? nodeData.size : 6;
-  const isConnected = connectedNodeIds.has(node);
-
-  if (!isConnected) {
-    return {
-      ...nodeData,
-      color: "#2a2f36",
-      highlighted: false,
-      forceLabel: false,
-      zIndex: 1,
-      size: Math.max(nodeSize * 0.9, 6),
-    };
-  }
-
-  if (node === selectedNodeId) {
-    return {
-      ...nodeData,
-      highlighted: true,
-      forceLabel: true,
-      zIndex: 10,
-      size: nodeSize * 1.3,
-    };
-  }
-
-  return {
-    ...nodeData,
-    highlighted: true,
-    forceLabel: true,
-    zIndex: 9,
-  };
-
-}
 
 
 function createNodeLabelDrawer(textColor: string, backgroundColor: string): NodeLabelDrawingFunction {

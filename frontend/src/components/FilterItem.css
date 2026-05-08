@@ -1,0 +1,55 @@
+.filter-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--primary-border);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--primary-bg) 28%, rgba(15, 18, 25, 0.58));
+  backdrop-filter: blur(10px);
+}
+
+.filter-bracket {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.filter-text {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.filter-select,
+.filter-input {
+  min-height: 1.8rem;
+  border: 1px solid var(--primary-border);
+  border-radius: 0.45rem;
+  background: rgba(8, 12, 18, 0.9);
+  color: inherit;
+  padding: 0.15rem 0.4rem;
+}
+
+.filter-select.include {
+  border-color: var(--primary-border);
+  background: color-mix(in oklab, var(--primary-bg) 45%, rgba(8, 12, 18, 0.9));
+}
+
+.filter-select.exclude {
+  border-color: var(--accent-border);
+  background: color-mix(in oklab, var(--accent-bg) 55%, rgba(8, 12, 18, 0.9));
+}
+
+.filter-input {
+  width: 8rem;
+}
+
+.filter-remove {
+  margin-left: 0.4rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+}

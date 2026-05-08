@@ -24,8 +24,6 @@
 .graphview-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  pointer-events: none;
 }
 
 .graphview-loading {
@@ -35,4 +33,35 @@
   transform: translate(-50%, -50%);
   margin: 0;
   color: var(--text-h);
+}
+
+.last-fetch-info {
+  position: absolute;
+  font-size: 0.8em;
+  top: 1em;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: color-mix(in oklab, var(--primary) 65%, var(--text-h) 35%);
+  z-index: 1000;
+}
+
+.version-info {
+  position: absolute;
+  font-size: 0.8em;
+  top: 2.2em;
+  left: 10em;
+  margin: 0;
+  color: color-mix(in oklab, var(--accent) 60%, var(--text-h) 40%);
+  z-index: 1000;
+}
+
+.filter-container {
+  position: absolute;
+  top: 4em;
+  left: 1em;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
 }
