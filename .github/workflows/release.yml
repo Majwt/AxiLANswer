@@ -75,7 +75,7 @@ jobs:
             -o publish/${{ matrix.name }}
       - name: Zip backend
         run: |
-          cd ../publish/${{ matrix.name }}
+          cd publish/${{ matrix.name }}
           zip -r ../../${{ matrix.name }}.zip .
 
       - uses: actions/upload-artifact@v4
