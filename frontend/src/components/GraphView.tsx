@@ -1,6 +1,6 @@
 
 import "./GraphView.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type JSX } from "react";
 import Sigma from "sigma";
 import type { GraphData, NodeDetails } from "../types/graph.ts";
 import { createGraph } from "../graph/createGraph.ts";
@@ -13,6 +13,7 @@ import { setupBackgroundGrid } from "../graph/setupBackgroundGrid.ts";
 import { nodeReducer } from "../graph/nodeReducer.ts";
 import { edgeReducer } from "../graph/edgeReducer.ts";
 import { buildEffectiveFilters } from "../filters/matchesFilter.ts";
+import forceAtlas2 from "graphology-layout-forceatlas2";
 
 type props = {
   data: GraphData;
@@ -34,7 +35,7 @@ type props = {
  * @returns {JSX.Element} The rendered GraphView component containing the graph visualization.
  *
  */
-export default function GraphView({ data, filters, onSelectNode, searchQuery, searchSelection, searchSelectionVersion }: props) {
+export default function GraphView({ data, filters, onSelectNode, searchQuery, searchSelection, searchSelectionVersion }: props): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<Sigma | null>(null);
@@ -66,11 +67,13 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery, se
     graphRef.current = graph;
 
     setupGraphEvents(renderer, graph, setSelectedNodeId, setConnectedNodeIds, onSelectNode);
+    setupReducers(renderer, graph, selectedNodeId, connectedNodeIds, filters, searchQuery);
 
 
+    // background grid
     const backgroundCleanup = setupBackgroundGrid(renderer, containerRef.current, gridRef);
     // layout
-    const layoutCleanup = forceSupervisorLayout(renderer, graph);
+    const layoutCleanup = import.meta.env.VITE_LAYOUT_MOVE == 1 ? forceSupervisorLayout(renderer, graph) : forceAtlas2Layout(renderer, graph);
 
     return () => {
       backgroundCleanup();
@@ -80,6 +83,7 @@ export default function GraphView({ data, filters, onSelectNode, searchQuery, se
       graphRef.current = null;
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, textColor, backgroundColor, onSelectNode]);
 
   useEffect(() => {
@@ -131,20 +135,19 @@ function selectNode(node: string, renderer: Sigma, graph: Graph, setSelectedNode
   onSelectNode(node, attrs);
 }
 
-// function forceAtlas2Layout(graph: Graph) {
-//   forceAtlas2.assign(graph, {
-//     iterations: 100,
-//     settings: {
-//       gravity: 2.5,
-//       scalingRatio: 2,
-//       strongGravityMode: false,
-//     },
-//   });
-//
-//   return () => { };
-// }
+function forceAtlas2Layout(_renderer: Sigma, graph: Graph) {
+  forceAtlas2.assign(graph, {
+    iterations: 100,
+    settings: {
+      gravity: 2.5,
+      scalingRatio: 2,
+      strongGravityMode: false,
+    },
+  });
 
-
+  return () => { };
+}
+void forceAtlas2Layout;
 
 function forceSupervisorLayout(renderer: Sigma, graph: Graph) {
 
@@ -163,6 +166,7 @@ function forceSupervisorLayout(renderer: Sigma, graph: Graph) {
     layout.kill();
   }
 }
+void forceSupervisorLayout;
 
 
 function enableNodeDragging(

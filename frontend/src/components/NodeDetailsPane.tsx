@@ -22,6 +22,24 @@ function renderPortService(port: number) {
   );
 }
 
+function renderProcessName(processName: string | null, pid: number) {
+  const label = processName ?? "Unknown Process";
+  return (
+    <span className={`port-service`} title={`PiD ${pid}`}>
+      {label}
+    </span>
+  );
+}
+
+function renderFqdnWithTooltip(fqdn: string, ip: string) {
+  const label = fqdn;
+  return (
+    <span className="port-service" title={`IP: ${ip}`}>
+      {label}
+    </span>
+  );
+}
+
 function getDirectionMeta(target: NodePortTarget) {
   return target.direction === "outgoing"
     ? { glyph: "↗", label: "Outgoing" }
@@ -46,19 +64,30 @@ export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) 
           title="Restore auto size"
           aria-label="Restore details pane auto size"
         >
-          <span aria-hidden="true">◀</span>
+          <span aria-hidden="true">▲</span>
         </button>
       ) : (
         <div className="details-content">
-          <button type="button" className="details-minimize-button" onClick={() => setPaneMode("minimized")}>
-            Minimize
-          </button>
           {node ? (
-            <>
-              <h2>{node.fqdn ?? node.ip}</h2>
-              <p>{node.ip}</p>
-              <p>{node.subnet}</p>
-              <h3>Connections</h3>
+            <div className="details-node-info">
+              <header className="details-header">
+                <span className="details-header-fqdn">{node.fqdn}</span>
+                <div className="details-header-subtitle">
+                  <span className="details-header-ip">{node.ip}</span>
+                  {node.subnet && (
+                    <span className="details-header-subnet">({node.subnet})</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="details-minimize-button"
+                  onClick={() => setPaneMode("minimized")}
+                  title="Minimize details pane"
+                  aria-label="Minimize details pane"
+                >
+                  <span aria-hidden="true">▾</span>
+                </button>
+              </header>
               {visibleTargets.length > 0 ? (
                 <table className="details-table">
                   <thead>
@@ -80,9 +109,9 @@ export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) 
                           </span>
                         </td>
                         <td>{renderPortService(target.port)}</td>
-                        <td>{target.fqdn}</td>
+                        <td>{renderFqdnWithTooltip(target.fqdn, target.ip)}</td>
                         <td>{renderPortService(target.remote_port)}</td>
-                        <td>{target.processName ?? "-"}</td>
+                        <td>{renderProcessName(target.processName, target.pid)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -90,7 +119,7 @@ export default function NodeDetailsPanel({ node, filters, searchQuery }: Props) 
               ) : (
                 <p>No connections match current filters.</p>
               )}
-            </>
+            </div>
           ) : (
             <p id="no-node-selected">Select a node to see details.</p>
           )}

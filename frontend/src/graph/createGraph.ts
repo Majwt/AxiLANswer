@@ -35,6 +35,7 @@ export function createGraph(containerRef: HTMLDivElement, data: GraphData, color
       curvedArrow: EdgeCurvedArrowProgram,
       curved: EdgeCurvedArrowProgram,
     },
+    labelSize: 13,
     labelColor: { color: colors.text },
     defaultDrawNodeLabel: createNodeLabelDrawer(colors.text, colors.background),
     defaultDrawNodeHover: createNodeHoverLabelDrawer(),

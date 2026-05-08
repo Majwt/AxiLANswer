@@ -1,33 +1,26 @@
 .details-panel {
   position: absolute;
-  right: 0rem;
-  top: 2rem;
-  bottom: 2rem;
+  right: 1em;
+  left: 1em;
+  bottom: 1em;
+  height: 40%;
   z-index: 3;
   pointer-events: auto;
-  min-width: 0;
-  max-width: 40vw;
   box-sizing: border-box;
   background: var(--bg);
-  border-radius: 1rem 0 0 1rem;
+  border-radius: 1rem;
   border: 1px solid var(--border);
-  border-left: 1px solid var(--border);
   overflow: hidden;
 }
 
-.details-panel.auto {
-  width: fit-content;
-  min-width: 360px;
-}
 
 .details-panel.minimized {
-  width: 18px;
-  min-width: 18px;
-  max-width: 18px;
+  height: 2.5rem;
   border-radius: 0;
 }
 
 .details-content {
+  position: relative;
   height: 97%;
   min-height: 0;
   padding: 1rem;
@@ -36,13 +29,29 @@
 }
 
 .details-minimize-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: transparent;
+  border-radius: 999px;
+  background: rgba(8, 12, 18, 0.85);
   color: var(--text-h);
-  padding: 0.35rem 0.7rem;
+  padding: 0;
   cursor: pointer;
-  margin-bottom: 1rem;
+}
+
+.details-minimize-button:hover {
+  background: color-mix(in oklab, var(--border) 30%, transparent);
+}
+
+.details-minimize-button span {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .details-minimized-strip {
@@ -71,6 +80,51 @@
   margin-bottom: 0.75rem;
 }
 
+.details-node-info {
+
+}
+.details-header {
+  position: relative;
+  padding: 0.7rem 0.9rem;
+  padding-right: 2.8rem;
+  border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+  background: color-mix(in oklab, var(--bg) 88%, #ffffff 12%);
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.details-header-fqdn {
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: var(--text-h);
+  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+
+.details-header-subtitle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.details-header-ip {
+  font-size: 0.9rem;
+  font-weight: 520;
+  color: color-mix(in oklab, var(--text-h) 90%, #ffffff 10%);
+}
+
+.details-header-subnet {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: color-mix(in oklab, var(--text-h) 65%, transparent);
+}
+
+
 .details-table {
   width: 100%;
   border-collapse: collapse;
@@ -82,6 +136,11 @@
   padding: 0.35rem 0.5rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+}
+
+/* highlight row on hover */
+.details-table tbody tr:hover {
+  background: color-mix(in oklab, var(--border) 30%, transparent);
 }
 
 #no-node-selected {

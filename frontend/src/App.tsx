@@ -8,17 +8,22 @@ import AppHeader from './components/AppHeader';
 import Filters from './components/Filters';
 import type { filter } from './types/filter';
 import SearchBar from './components/SearchBar';
+import { readInitialSelectedNodeId, readInitialFilters, readInitialSearchQuery, refreshIntervalMinutes, serializeFiltersForUrl, SEARCH_QUERY_KEY, FILTERS_QUERY_KEY, SELECTED_NODE_QUERY_KEY } from './utils/urlStateService';
 
 document.title = brand.name;
 
+
 function App() {
+  const initialSelectedNodeId = readInitialSelectedNodeId();
 
   const [data, setData] = useState<GraphData | null>(null);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
-  const [filters, setFilters] = useState<filter[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [searchSelection, setSearchSelection] = useState<string>("");
-  const [searchSelectionVersion, setSearchSelectionVersion] = useState(0);
+  const [selectedNodeId, setSelectedNodeId] = useState<string>(initialSelectedNodeId);
+  const [filters, setFilters] = useState<filter[]>(() => readInitialFilters());
+  const [searchQuery, setSearchQuery] = useState<string>(() => readInitialSearchQuery());
+  const [searchSelection, setSearchSelection] = useState<string>(initialSelectedNodeId);
+  const [searchSelectionVersion, setSearchSelectionVersion] = useState(initialSelectedNodeId ? 1 : 0);
+  const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null);
   const searchSuggestions = useMemo(() => {
     if (!data) return [];
 
@@ -33,8 +38,9 @@ function App() {
     return [...nodeNames].sort((a, b) => a.localeCompare(b));
   }, [data]);
 
-  const handleSelectNode = useCallback((_node: string, attrs: NodeDetails | null) => {
+  const handleSelectNode = useCallback((node: string, attrs: NodeDetails | null) => {
     setSelectedNode(attrs);
+    setSelectedNodeId(attrs ? node : "");
   }, []);
 
   const handleSearchSubmit = useCallback((query: string) => {
@@ -48,16 +54,43 @@ function App() {
     async function loadGraph() {
       const graph = await fetchGraph();
       setData(graph);
+      setLastFetchedAt(new Date());
     }
     loadGraph();
   }, []);
-  // auto fetch graph every 5 minutes
+  // auto fetch graph every n minutes
   useEffect(() => {
+    async function refreshGraph() {
+      const graph = await fetchGraph();
+      setData(graph);
+      setLastFetchedAt(new Date());
+    }
 
+    const intervalId = window.setInterval(() => {
+      refreshGraph();
+    }, refreshIntervalMinutes * 60 * 1000);
 
+    return () => window.clearInterval(intervalId);
   }, []);
 
-  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (searchQuery.trim()) params.set(SEARCH_QUERY_KEY, searchQuery);
+    else params.delete(SEARCH_QUERY_KEY);
+
+    if (filters.length > 0) params.set(FILTERS_QUERY_KEY, serializeFiltersForUrl(filters));
+    else params.delete(FILTERS_QUERY_KEY);
+
+    if (selectedNodeId) params.set(SELECTED_NODE_QUERY_KEY, selectedNodeId);
+    else params.delete(SELECTED_NODE_QUERY_KEY);
+
+    const queryString = params.toString();
+    const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+    window.history.replaceState(null, "", nextUrl);
+  }, [searchQuery, filters, selectedNodeId]);
+
+
 
   return (
     <main className="app">
@@ -67,13 +100,25 @@ function App() {
         </div>
         <div className="graphview-overlay">
           <AppHeader />
-          <NodeDetailsPanel node={selectedNode} filters={filters} searchQuery={searchQuery} />
+          {selectedNode ? <NodeDetailsPanel node={selectedNode} filters={filters} searchQuery={searchQuery} /> : null}
           <div className="filter-container">
             <SearchBar query={searchQuery} setQuery={setSearchQuery} suggestions={searchSuggestions} onSubmit={handleSearchSubmit} />
             <Filters filters={filters} setFilters={setFilters} />
           </div>
-          <span className="version-info">{"v0.0.0"}</span>
-          <span className="last-fetch-info">{"Updated at 15:00"}</span>
+          <span className="version-info">
+
+            {import.meta.env.PROD ? (
+              <>
+                v{import.meta.env.VITE_APP_VERSION}
+              </>
+            ) : (
+              <>
+                  v{new Date().toISOString()} (dev)
+              </>
+
+            )}
+          </span>
+          <span className="last-fetch-info">{`Updated at ${lastFetchedAt ? lastFetchedAt.toLocaleTimeString(["sv-se"], { hour: "2-digit", minute: "2-digit" }) : "--:--"}`}</span>
         </div>
       </section>
     </main>

@@ -66,7 +66,7 @@ function matchesEdgeFilter(edge: EdgeFilterContext, entry: filter): boolean {
   }
 
   if (entry.type === "fqdn") {
-    const fqdnMatches = matchesFqdn(edge.sourceNode.fqdn, value) || matchesFqdn(edge.targetNode.fqdn, value);
+    const fqdnMatches = matchesFqdn(edge.sourceNode.fqdn, value); //|| matchesFqdn(edge.targetNode.fqdn, value);
     return applyOperation(fqdnMatches, entry.operation);
   }
 
@@ -83,7 +83,8 @@ function matchesEdgeFilter(edge: EdgeFilterContext, entry: filter): boolean {
     const serviceMatches = edge.connections.some((connection) => {
       const sourceService = getServiceName(connection.source_port).toLowerCase();
       const targetService = getServiceName(connection.target_port).toLowerCase();
-      return sourceService.includes(lowerValue) || targetService.includes(lowerValue);
+      const serviceMatches = sourceService === lowerValue || targetService === lowerValue;
+      return serviceMatches;
     });
     return applyOperation(serviceMatches, entry.operation);
   }
@@ -109,7 +110,7 @@ function matchesNodeConnectionFilter(node: NodeDetails, target: NodePortTarget, 
   }
 
   if (entry.type === "fqdn") {
-    const fqdnMatches = matchesFqdn(node.fqdn, value) || matchesFqdn(target.fqdn, value);
+    const fqdnMatches = matchesFqdn(node.fqdn, value)// || matchesFqdn(target.fqdn, value);
     return applyOperation(fqdnMatches, entry.operation);
   }
 
@@ -122,7 +123,7 @@ function matchesNodeConnectionFilter(node: NodeDetails, target: NodePortTarget, 
     const lowerValue = value.toLowerCase();
     const localService = getServiceName(target.port).toLowerCase();
     const remoteService = getServiceName(target.remote_port).toLowerCase();
-    const serviceMatches = localService.includes(lowerValue) || remoteService.includes(lowerValue);
+    const serviceMatches = localService === lowerValue || remoteService === lowerValue;
     return applyOperation(serviceMatches, entry.operation);
   }
 
@@ -153,7 +154,6 @@ function matchesFqdn(fqdn: string, rawPattern: string): boolean {
 
   if (!pattern.includes(".")) return firstLabel.startsWith(pattern);
 
-  if (host === pattern) return true;
 
   return matchesFqdnFuzzy(host, firstLabel, pattern);
 }
@@ -164,5 +164,5 @@ function matchesFqdnFuzzy(host: string, firstLabel: string, pattern: string): bo
   const fullScore = fuzzy(pattern, host);
   const labelScore = fuzzy(pattern, firstLabel);
 
-  return Math.max(fullScore, labelScore) >= 0.78;
+  return Math.max(fullScore, labelScore) >= 0.95;
 }
