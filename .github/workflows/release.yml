@@ -64,7 +64,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
 
-          dotnet publish api \
+          dotnet publish \
             -c Release \
             -r ${{ matrix.rid }} \
             --self-contained false \
