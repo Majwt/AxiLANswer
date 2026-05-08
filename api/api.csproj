@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- EXE name -->
-    <AssemblyName>MrViewApi</AssemblyName>
+    <AssemblyName>AxiLANswerApi</AssemblyName>
 
     <!-- Versioning -->
     <Version>0.1.0</Version>
@@ -15,9 +15,9 @@
     <FileVersion>0.1.0.0</FileVersion>
 
     <!-- Windows file properties -->
-    <Title>MrView API</Title>
-    <Product>MrView</Product>
-    <Description>Backend API for MrView network visualization</Description>
+    <Title>AxiLANswerApi API</Title>
+    <Product>AxiLANswerApi</Product>
+    <Description>Backend API for AxiLANswerApi network visualization</Description>
     <Company>Axians</Company>
     <Authors>Theodor Wase and Walter Almgren</Authors>
 

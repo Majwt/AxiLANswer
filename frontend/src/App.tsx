@@ -124,19 +124,6 @@ function App() {
             <SearchBar query={searchQuery} setQuery={setSearchQuery} suggestions={searchSuggestions} onSubmit={handleSearchSubmit} />
             <Filters filters={filters} setFilters={setFilters} />
           </div>
-          <span className="version-info">
-
-            {import.meta.env.PROD ? (
-              <>
-                v{import.meta.env.VITE_APP_VERSION}
-              </>
-            ) : (
-              <>
-                  v{new Date().toISOString()} (dev)
-              </>
-
-            )}
-          </span>
           <span className="last-fetch-info">{`Updated at ${lastFetchedAt ? lastFetchedAt.toLocaleTimeString(["sv-se"], { hour: "2-digit", minute: "2-digit" }) : "--:--"}`}</span>
         </div>
       </section>

@@ -46,15 +46,6 @@
   z-index: 1000;
 }
 
-.version-info {
-  position: absolute;
-  font-size: 0.8em;
-  top: 2.2em;
-  left: 10em;
-  margin: 0;
-  color: color-mix(in oklab, var(--accent) 60%, var(--text-h) 40%);
-  z-index: 1000;
-}
 
 .filter-container {
   position: absolute;
