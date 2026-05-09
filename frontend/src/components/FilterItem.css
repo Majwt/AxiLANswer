@@ -6,16 +6,16 @@
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--primary-border);
   border-radius: 0.75rem;
-  background: color-mix(in oklab, var(--primary-bg) 28%, rgba(15, 18, 25, 0.58));
+  background: color-mix(in oklab, var(--primary-bg) 24%, var(--surface-elevated) 76%);
   backdrop-filter: blur(10px);
 }
 
 .filter-bracket {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--filter-muted-text);
 }
 
 .filter-text {
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--filter-strong-text);
 }
 
 .filter-select,
@@ -23,19 +23,19 @@
   min-height: 1.8rem;
   border: 1px solid var(--primary-border);
   border-radius: 0.45rem;
-  background: rgba(8, 12, 18, 0.9);
+  background: var(--surface-control-strong);
   color: inherit;
   padding: 0.15rem 0.4rem;
 }
 
 .filter-select.include {
   border-color: var(--primary-border);
-  background: color-mix(in oklab, var(--primary-bg) 45%, rgba(8, 12, 18, 0.9));
+  background: color-mix(in oklab, var(--primary-bg) 42%, var(--surface-control-strong) 58%);
 }
 
 .filter-select.exclude {
   border-color: var(--accent-border);
-  background: color-mix(in oklab, var(--accent-bg) 55%, rgba(8, 12, 18, 0.9));
+  background: color-mix(in oklab, var(--accent-bg) 48%, var(--surface-control-strong) 52%);
 }
 
 .filter-input {

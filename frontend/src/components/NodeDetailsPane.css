@@ -39,7 +39,7 @@
   justify-content: center;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(8, 12, 18, 0.85);
+  background: var(--surface-control-strong);
   color: var(--text-h);
   padding: 0;
   cursor: pointer;
