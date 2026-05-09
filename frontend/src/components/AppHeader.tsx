@@ -1,6 +1,4 @@
 import "./AppHeader.css";
-
-import logo from "@branding/logo.svg";
 import brand from "../config/brand";
 
 export default function AppHeader() {
@@ -8,7 +6,9 @@ export default function AppHeader() {
     <>
       <header className="app-header">
         <div className="brand-logo">
-          <img src={logo} height={35} alt={`${brand.name} Logo`}  />
+          <h1 className="logo" aria-label={brand.name}>
+              <span className="axi">Axi</span><span className="lan">LAN</span><span className="swer">swer</span>
+          </h1>
           <span className="version-info">
 
             {import.meta.env.PROD ? (

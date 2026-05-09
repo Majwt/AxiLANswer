@@ -17,7 +17,7 @@
   pointer-events: none;
   background-image: radial-gradient(
     circle,
-    rgba(128, 128, 128, 0.82) 3.2px,
+    var(--grid-dot) 3.2px,
     transparent 1px
   );
   background-size: var(--grid-spacing) var(--grid-spacing);

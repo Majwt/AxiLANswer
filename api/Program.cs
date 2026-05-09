@@ -1,14 +1,6 @@
 using api;
 using Microsoft.Data.SqlClient;
 
-const string getConnectionsSql = 
-    """
-    SELECT host_name, direction, pid, process_name,
-        source_fqdn, source_ip, source_port,
-        target_fqdn, target_ip, target_port
-    FROM inventory.connections
-    """;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -16,8 +8,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower;
+    options.SerializerOptions.PropertyNamingPolicy = System
+        .Text
+        .Json
+        .JsonNamingPolicy
+        .SnakeCaseLower;
 });
+builder.Configuration.AddEnvironmentVariables();
 
 var app = builder.Build();
 
@@ -28,7 +25,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.Logger.LogInformation("Starting API...");
+app.Logger.LogInformation("Starting API v{0}", typeof(Program).Assembly.GetName().Version);
+
+var database_tablename =
+    builder.Configuration["database:table_name"]
+    ?? throw new InvalidOperationException(
+        "Database table name is not configured! Change the 'database:table_name' setting in appsettings.json or set the environment variable 'DATABASE__TABLE_NAME'."
+    );
+
+var getConnectionsSql = $"""
+    SELECT host_name, direction, pid, process_name,
+        source_fqdn, source_ip, source_port,
+        target_fqdn, target_ip, target_port
+    FROM {database_tablename}
+    """;
 
 app.MapGet("/", () => Results.Ok(new { status = "ok" }));
 
@@ -40,7 +50,7 @@ app.MapGet(
 
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync();
-    
+
         var cmd = new SqlCommand(getConnectionsSql, conn);
 
         var nodes = new List<Node>();
@@ -50,12 +60,15 @@ app.MapGet(
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            if (reader["source_fqdn"] is not string sourceFqdn || reader["source_ip"] is not string sourceIp || 
-                reader["target_fqdn"] is not string targetFqdn || reader["target_ip"] is not string targetIp)
+            if (
+                reader["source_fqdn"] is not string sourceFqdn
+                || reader["source_ip"] is not string sourceIp
+                || reader["target_fqdn"] is not string targetFqdn
+                || reader["target_ip"] is not string targetIp
+            )
             {
                 continue;
             }
-
 
             var processName = reader["process_name"] as string;
 
@@ -66,17 +79,16 @@ app.MapGet(
 
             var targetPort =
                 reader["target_port"] == DBNull.Value ? 0 : Convert.ToInt32(reader["target_port"]);
-            
+
             if (seenNodes.Add(sourceFqdn))
             {
                 nodes.Add(new Node(sourceFqdn, sourceIp));
             }
-            
+
             if (seenNodes.Add(targetFqdn))
             {
                 nodes.Add(new Node(targetFqdn, targetIp));
             }
-
 
             edges.Add(
                 new Edge(
@@ -95,7 +107,6 @@ app.MapGet(
         return Results.Ok(new GraphResponse(nodes, edges));
     }
 );
-
 
 try
 {
