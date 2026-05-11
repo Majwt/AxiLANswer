@@ -32,6 +32,13 @@ var configuredTableName =
     ?? throw new InvalidOperationException(
         "Database table name is not configured! Change the 'database:table_name' setting in appsettings.json or set the environment variable 'DATABASE__TABLE_NAME'."
     );
+var configuredSeenCountThreshold = builder.Configuration["data:seen_count_threshold"] ?? "0";
+if (configuredSeenCountThreshold.Any(c => !char.IsDigit(c)))
+{
+    throw new InvalidOperationException(
+        "Seen count threshold must be a non-negative integer. Change the 'data:seen_count_threshold' setting in appsettings.json or set the environment variable 'DATA__SEEN_COUNT_THRESHOLD' to a valid value."
+    );
+}
 var safeTableName = QuoteMultipartIdentifier(configuredTableName);
 
 var getConnectionsSql = $"""
@@ -41,7 +48,7 @@ var getConnectionsSql = $"""
         source_pid, source_process_name,
         target_fqdn, target_ip, target_port,
         target_pid, target_process_name
-    FROM {safeTableName}
+    FROM {safeTableName} where seen_count > {configuredSeenCountThreshold}
     """;
 
 app.MapGet("/", () => Results.Ok(new { status = "ok" }));
