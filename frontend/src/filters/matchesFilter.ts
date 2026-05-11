@@ -73,7 +73,9 @@ function matchesEdgeFilter(edge: EdgeFilterContext, entry: filter): boolean {
   if (entry.type === "process") {
     const lowerValue = value.toLowerCase();
     const processMatches = edge.connections.some((connection) =>
-      (connection.process_name ?? "").toLowerCase().includes(lowerValue),
+      (connection.process_name ?? "").toLowerCase().includes(lowerValue)
+      || (connection.source_process_name ?? "").toLowerCase().includes(lowerValue)
+      || (connection.target_process_name ?? "").toLowerCase().includes(lowerValue),
     );
     return applyOperation(processMatches, entry.operation);
   }

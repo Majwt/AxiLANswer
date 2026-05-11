@@ -46,8 +46,10 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
   }
 
   for (const edge of edges) {
-    const pid = edge.pid ?? -1;
-    const processName = edge.process_name ?? null;
+    const sourcePid = edge.source_pid ?? edge.pid ?? -1;
+    const sourceProcessName = edge.source_process_name ?? edge.process_name ?? null;
+    const targetPid = edge.target_pid ?? edge.pid ?? -1;
+    const targetProcessName = edge.target_process_name ?? edge.process_name ?? null;
 
     addTarget(edge.source_fqdn, {
       port: edge.source_port,
@@ -55,8 +57,8 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       fqdn: edge.target_fqdn,
       ip: edge.target_ip,
       direction: "outgoing",
-      pid,
-      processName,
+      pid: sourcePid,
+      processName: sourceProcessName,
     });
 
     addTarget(edge.target_fqdn, {
@@ -65,8 +67,8 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       fqdn: edge.source_fqdn,
       ip: edge.source_ip,
       direction: "incoming",
-      pid,
-      processName,
+      pid: targetPid,
+      processName: targetProcessName,
     });
   }
 
@@ -105,12 +107,13 @@ export function addNodes(graph: Graph, data: GraphData) {
   }
 
   for (const edge of edges) {
+    const seenCount = Math.max(edge.seen_count ?? 1, 1);
     allFqdns.add(edge.source_fqdn);
     allFqdns.add(edge.target_fqdn);
     if (!fqdnToIp.has(edge.source_fqdn)) fqdnToIp.set(edge.source_fqdn, edge.source_ip);
     if (!fqdnToIp.has(edge.target_fqdn)) fqdnToIp.set(edge.target_fqdn, edge.target_ip);
-    connectionCountByFqdn.set(edge.source_fqdn, (connectionCountByFqdn.get(edge.source_fqdn) ?? 0) + 1);
-    connectionCountByFqdn.set(edge.target_fqdn, (connectionCountByFqdn.get(edge.target_fqdn) ?? 0) + 1);
+    connectionCountByFqdn.set(edge.source_fqdn, (connectionCountByFqdn.get(edge.source_fqdn) ?? 0) + seenCount);
+    connectionCountByFqdn.set(edge.target_fqdn, (connectionCountByFqdn.get(edge.target_fqdn) ?? 0) + seenCount);
   }
 
   const total = Math.max(allFqdns.size, 1);

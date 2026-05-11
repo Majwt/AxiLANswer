@@ -8,11 +8,16 @@ export type GraphEdge = {
   source_ip: string;
   source_port: number;
   source_fqdn: string;
+  source_pid?: number;
+  source_process_name?: string;
   target_ip: string;
   target_port: number;
   target_fqdn: string;
+  target_pid?: number;
+  target_process_name?: string;
   pid?: number;
   process_name?: string;
+  seen_count?: number;
 };
 
 export type GraphData = {

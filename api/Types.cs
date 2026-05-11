@@ -17,7 +17,12 @@ public sealed record Edge(
     string TargetFqdn,
     
     int Pid,
-    string? ProcessName
+    string? ProcessName,
+    long SeenCount,
+    int? SourcePid,
+    string? SourceProcessName,
+    int? TargetPid,
+    string? TargetProcessName
 );
 
 public sealed record GraphResponse(

@@ -172,16 +172,18 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                   <thead>
                     <tr>
                       <th>Source Service</th>
+                      <th>Source Process</th>
                       <th>Target Service</th>
-                      <th>Process</th>
+                      <th>Target Process</th>
                     </tr>
                   </thead>
                   <tbody>
                     {visibleEdgeConnections.map((connection, index) => (
-                      <tr key={`${edge.id}-${connection.source_port}-${connection.target_port}-${connection.pid ?? 0}-${connection.process_name ?? ""}-${index}`}>
+                      <tr key={`${edge.id}-${connection.source_port}-${connection.target_port}-${connection.source_pid ?? connection.pid ?? 0}-${connection.source_process_name ?? connection.process_name ?? ""}-${connection.target_pid ?? connection.pid ?? 0}-${connection.target_process_name ?? connection.process_name ?? ""}-${index}`}>
                         <td>{renderPortService(connection.source_port)}</td>
+                        <td>{renderProcessName(connection.source_process_name ?? connection.process_name ?? null, connection.source_pid ?? connection.pid ?? 0)}</td>
                         <td>{renderPortService(connection.target_port)}</td>
-                        <td>{renderProcessName(connection.process_name ?? null, connection.pid ?? 0)}</td>
+                        <td>{renderProcessName(connection.target_process_name ?? connection.process_name ?? null, connection.target_pid ?? connection.pid ?? 0)}</td>
                       </tr>
                     ))}
                   </tbody>
