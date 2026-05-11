@@ -124,6 +124,34 @@
   color: color-mix(in oklab, var(--text-h) 65%, transparent);
 }
 
+.details-header-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.details-count-pill {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  font-size: 0.75rem;
+  color: color-mix(in oklab, var(--text-h) 86%, transparent);
+  background: color-mix(in oklab, var(--surface-control-strong) 35%, transparent);
+}
+
+.details-count-pill.emphasis {
+  border-color: var(--primary-border);
+  color: color-mix(in oklab, var(--text-h) 82%, var(--primary) 18%);
+  background: color-mix(in oklab, var(--primary-bg) 72%, transparent);
+}
+
+.details-aggregation-note {
+  margin: 0 0 0.7rem;
+  font-size: 0.8rem;
+  color: color-mix(in oklab, var(--text-h) 70%, transparent);
+}
+
 
 .details-table {
   width: 100%;

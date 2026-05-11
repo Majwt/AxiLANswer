@@ -29,23 +29,27 @@ function getNodeColor(fqdn: string): string {
 }
 
 function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
-  const index = new Map<string, { targets: PortTarget[]; seen: Set<string> }>();
+  const index = new Map<string, Map<string, PortTarget>>();
 
-  function addTarget(ownerFqdn: string, target: PortTarget) {
-    let entry = index.get(ownerFqdn);
-    if (!entry) {
-      entry = { targets: [], seen: new Set<string>() };
-      index.set(ownerFqdn, entry);
+  function addTarget(ownerFqdn: string, target: Omit<PortTarget, "seenCount">, seenCount: number) {
+    let groupedTargets = index.get(ownerFqdn);
+    if (!groupedTargets) {
+      groupedTargets = new Map<string, PortTarget>();
+      index.set(ownerFqdn, groupedTargets);
     }
 
     const key = `${target.port}->${target.remote_port}->${target.fqdn}->${target.ip}->${target.direction}->${target.pid}->${target.processName ?? ""}`;
-    if (entry.seen.has(key)) return;
+    const existing = groupedTargets.get(key);
+    if (existing) {
+      existing.seenCount += seenCount;
+      return;
+    }
 
-    entry.seen.add(key);
-    entry.targets.push(target);
+    groupedTargets.set(key, { ...target, seenCount });
   }
 
   for (const edge of edges) {
+    const seenCount = Math.max(edge.seen_count ?? 1, 1);
     const sourcePid = edge.source_pid ?? edge.pid ?? -1;
     const sourceProcessName = edge.source_process_name ?? edge.process_name ?? null;
     const targetPid = edge.target_pid ?? edge.pid ?? -1;
@@ -59,7 +63,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       direction: "outgoing",
       pid: sourcePid,
       processName: sourceProcessName,
-    });
+    }, seenCount);
 
     addTarget(edge.target_fqdn, {
       port: edge.target_port,
@@ -69,13 +73,15 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       direction: "incoming",
       pid: targetPid,
       processName: targetProcessName,
-    });
+    }, seenCount);
   }
 
   const result = new Map<string, PortTarget[]>();
-  for (const [fqdn, { targets }] of index) {
+  for (const [fqdn, groupedTargets] of index) {
+    const targets = Array.from(groupedTargets.values());
     targets.sort((a, b) =>
-      a.port - b.port
+      b.seenCount - a.seenCount
+      || a.port - b.port
       || a.remote_port - b.remote_port
       || a.fqdn.localeCompare(b.fqdn)
       || a.direction.localeCompare(b.direction)
@@ -87,7 +93,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
 
   return result;
 }
-
+ 
 /**
  * Adds nodes to the graph based on the provided graph data.
  *

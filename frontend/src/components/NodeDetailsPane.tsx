@@ -2,7 +2,7 @@ import "./NodeDetailsPane.css";
 import { useMemo, useState } from "react";
 import { buildEffectiveFilters, matchesEdgeFilters, matchesNodeConnectionFilters } from "../filters/matchesFilter";
 import type { filter } from "../types/filter";
-import type { EdgeDetails, NodeDetails, NodePortTarget } from "../types/graph";
+import type { EdgeDetails, GraphEdge, NodeDetails, NodePortTarget } from "../types/graph";
 import { getServiceName, isDynamicPort } from "../utils/portServices";
 
 type Props = {
@@ -13,6 +13,10 @@ type Props = {
 };
 
 type PaneMode = "auto" | "minimized";
+type AggregatedEdgeConnection = {
+  connection: GraphEdge;
+  seenCount: number;
+};
 
 function renderPortService(port: number) {
   const label = getServiceName(port);
@@ -83,6 +87,34 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
       matchesEdgeFilters({ sourceNode, targetNode, connections: [connection] }, effectiveFilters),
     );
   }, [edge, effectiveFilters]);
+  const visibleNodeConnectionCount = useMemo(
+    () => visibleTargets.reduce((sum, target) => sum + target.seenCount, 0),
+    [visibleTargets],
+  );
+  const aggregatedVisibleEdgeConnections = useMemo<AggregatedEdgeConnection[]>(() => {
+    const groups = new Map<string, AggregatedEdgeConnection>();
+
+    for (const connection of visibleEdgeConnections) {
+      const key = `${connection.source_port}-${connection.target_port}-${connection.source_pid ?? connection.pid ?? -1}-${connection.source_process_name ?? connection.process_name ?? ""}-${connection.target_pid ?? connection.pid ?? -1}-${connection.target_process_name ?? connection.process_name ?? ""}`;
+      const seenCount = Math.max(connection.seen_count ?? 1, 1);
+      const existing = groups.get(key);
+      if (existing) {
+        existing.seenCount += seenCount;
+        continue;
+      }
+      groups.set(key, { connection, seenCount });
+    }
+
+    return Array.from(groups.values()).sort((a, b) =>
+      b.seenCount - a.seenCount
+      || a.connection.source_port - b.connection.source_port
+      || a.connection.target_port - b.connection.target_port,
+    );
+  }, [visibleEdgeConnections]);
+  const visibleEdgeConnectionCount = useMemo(
+    () => aggregatedVisibleEdgeConnections.reduce((sum, entry) => sum + entry.seenCount, 0),
+    [aggregatedVisibleEdgeConnections],
+  );
 
   return (
     <aside className={`details-panel ${paneMode}`}>
@@ -108,6 +140,10 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                     <span className="details-header-subnet">({node.subnet})</span>
                   )}
                 </div>
+                <div className="details-header-metrics">
+                  <span className="details-count-pill">{visibleTargets.length} aggregated rows</span>
+                  <span className="details-count-pill emphasis">{visibleNodeConnectionCount} connections</span>
+                </div>
                 <button
                   type="button"
                   className="details-minimize-button"
@@ -118,15 +154,19 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                   <span aria-hidden="true">▾</span>
                 </button>
               </header>
+              <p className="details-aggregation-note">
+                Process/PID values are representative aggregated values (max PID per side), not guaranteed to be the latest sample.
+              </p>
               {visibleTargets.length > 0 ? (
                 <table className="details-table">
                   <thead>
                     <tr>
                       <th>Direction</th>
-                      <th>Service</th>
-                      <th>FQDN</th>
+                      <th>Local Service</th>
+                      <th>Peer Host</th>
                       <th>Peer Service</th>
-                      <th>Process</th>
+                      <th>Local Process</th>
+                      <th>Connections</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -142,6 +182,7 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                         <td>{renderFqdnWithTooltip(target.fqdn, target.ip)}</td>
                         <td>{renderPortService(target.remote_port)}</td>
                         <td>{renderProcessName(target.processName, target.pid)}</td>
+                        <td>{target.seenCount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -157,6 +198,10 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                 <div className="details-header-subtitle">
                   <span className="details-header-ip">{edge.source_ip} → {edge.target_ip}</span>
                 </div>
+                <div className="details-header-metrics">
+                  <span className="details-count-pill">{aggregatedVisibleEdgeConnections.length} aggregated rows</span>
+                  <span className="details-count-pill emphasis">{visibleEdgeConnectionCount} connections</span>
+                </div>
                 <button
                   type="button"
                   className="details-minimize-button"
@@ -167,23 +212,28 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                   <span aria-hidden="true">▾</span>
                 </button>
               </header>
-              {visibleEdgeConnections.length > 0 ? (
+              <p className="details-aggregation-note">
+                Process/PID values are representative aggregated values (max PID per side), not guaranteed to be the latest sample.
+              </p>
+              {aggregatedVisibleEdgeConnections.length > 0 ? (
                 <table className="details-table">
                   <thead>
                     <tr>
-                      <th>Source Service</th>
-                      <th>Source Process</th>
-                      <th>Target Service</th>
-                      <th>Target Process</th>
+                      <th>From Service</th>
+                      <th>From Process</th>
+                      <th>To Service</th>
+                      <th>To Process</th>
+                      <th>Connections</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleEdgeConnections.map((connection, index) => (
+                    {aggregatedVisibleEdgeConnections.map(({ connection, seenCount }, index) => (
                       <tr key={`${edge.id}-${connection.source_port}-${connection.target_port}-${connection.source_pid ?? connection.pid ?? 0}-${connection.source_process_name ?? connection.process_name ?? ""}-${connection.target_pid ?? connection.pid ?? 0}-${connection.target_process_name ?? connection.process_name ?? ""}-${index}`}>
                         <td>{renderPortService(connection.source_port)}</td>
                         <td>{renderProcessName(connection.source_process_name ?? connection.process_name ?? null, connection.source_pid ?? connection.pid ?? 0)}</td>
                         <td>{renderPortService(connection.target_port)}</td>
                         <td>{renderProcessName(connection.target_process_name ?? connection.process_name ?? null, connection.target_pid ?? connection.pid ?? 0)}</td>
+                        <td>{seenCount}</td>
                       </tr>
                     ))}
                   </tbody>

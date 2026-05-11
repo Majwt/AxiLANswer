@@ -42,6 +42,7 @@ export type NodePortTarget = {
   direction: "incoming" | "outgoing";
   pid: number;
   processName: string | null;
+  seenCount: number;
 };
 
 
