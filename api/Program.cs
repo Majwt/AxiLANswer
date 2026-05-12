@@ -32,7 +32,7 @@ var configuredTableName =
     ?? throw new InvalidOperationException(
         "Database table name is not configured! Change the 'database:table_name' setting in appsettings.json or set the environment variable 'DATABASE__TABLE_NAME'."
     );
-var configuredSeenCountThreshold = builder.Configuration["data:seen_count_threshold"] ?? "0";
+var configuredSeenCountThreshold = builder.Configuration["database:seen_count_threshold"] ?? "0";
 if (configuredSeenCountThreshold.Any(c => !char.IsDigit(c)))
 {
     throw new InvalidOperationException(
