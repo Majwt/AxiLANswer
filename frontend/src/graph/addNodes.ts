@@ -63,6 +63,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       direction: "outgoing",
       pid: sourcePid,
       processName: sourceProcessName,
+      lastSeen: edge.last_seen ?? new Date().toISOString(),
     }, seenCount);
 
     addTarget(edge.target_fqdn, {
@@ -73,6 +74,7 @@ function createEdgePortIndex(edges: GraphEdge[]): Map<string, PortTarget[]> {
       direction: "incoming",
       pid: targetPid,
       processName: targetProcessName,
+      lastSeen: edge.last_seen ?? new Date().toISOString(),
     }, seenCount);
   }
 

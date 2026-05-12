@@ -18,6 +18,7 @@ export type GraphEdge = {
   pid?: number;
   process_name?: string;
   seen_count?: number;
+  last_seen?: string;
 };
 
 export type GraphData = {
@@ -43,6 +44,7 @@ export type NodePortTarget = {
   pid: number;
   processName: string | null;
   seenCount: number;
+  lastSeen: string;
 };
 
 

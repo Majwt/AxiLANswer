@@ -22,7 +22,9 @@ public sealed record Edge(
     int? SourcePid,
     string? SourceProcessName,
     int? TargetPid,
-    string? TargetProcessName
+    string? TargetProcessName,
+
+    DateTime LastSeen
 );
 
 public sealed record GraphResponse(

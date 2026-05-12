@@ -47,7 +47,7 @@ var getConnectionsSql = $"""
         source_fqdn, source_ip, source_port,
         source_pid, source_process_name,
         target_fqdn, target_ip, target_port,
-        target_pid, target_process_name
+        target_pid, target_process_name, last_seen
     FROM {safeTableName} where seen_count > {configuredSeenCountThreshold}
     """;
 
@@ -112,6 +112,9 @@ app.MapGet(
             var stableEdgeId = endpointA is null || endpointB is null
                 ? $"{sourceFqdn}:{sourcePort}->{targetFqdn}:{targetPort}"
                 : $"{endpointA}|{endpointB}|{servicePort}";
+            var lastSeen = reader["last_seen"] == DBNull.Value
+                ? DateTime.MinValue
+                : Convert.ToDateTime(reader["last_seen"]);
 
             if (seenNodes.Add(sourceFqdn))
             {
@@ -138,7 +141,8 @@ app.MapGet(
                     SourcePid: sourcePid,
                     SourceProcessName: sourceProcessName,
                     TargetPid: targetPid,
-                    TargetProcessName: targetProcessName
+                    TargetProcessName: targetProcessName,
+                    LastSeen: lastSeen
                 )
             );
         }

@@ -36,12 +36,17 @@ function renderProcessName(processName: string | null, pid: number) {
   );
 }
 
-function renderFqdnWithTooltip(fqdn: string, ip: string) {
-  const label = fqdn;
+function renderLastSeen(value: string) {
+  const parsed = Date.parse(value);
+  const isValid = Number.isFinite(parsed);
+  const display = isValid
+    ? new Date(parsed).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "medium" })
+    : value;
+
   return (
-    <span className="port-service" title={`IP: ${ip}`}>
-      {label}
-    </span>
+    <time className={`last-seen-chip ${isValid ? "" : "invalid"}`} dateTime={isValid ? new Date(parsed).toISOString() : undefined} title={value}>
+      {display}
+    </time>
   );
 }
 
@@ -156,6 +161,8 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
               </header>
               <p className="details-aggregation-note">
                 Process/PID values are representative aggregated values (max PID per side), not guaranteed to be the latest sample.
+                  <br />
+                The dynamic port is latest seen port for the connection, but may not be the only ports used in the connection history.
               </p>
               {visibleTargets.length > 0 ? (
                 <table className="details-table">
@@ -163,10 +170,14 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                     <tr>
                       <th>Direction</th>
                       <th>Local Service</th>
-                      <th>Peer Host</th>
-                      <th>Peer Service</th>
+                      <th>Local Port</th>
                       <th>Local Process</th>
+                      <th>Peer Host</th>
+                      <th>Peer Ip</th>
+                      <th>Peer Service</th>
+                      <th>Peer Port</th>
                       <th>Connections</th>
+                      <th>Last Seen</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -179,10 +190,14 @@ export default function NodeDetailsPanel({ node, edge, filters, searchQuery }: P
                           </span>
                         </td>
                         <td>{renderPortService(target.port)}</td>
-                        <td>{renderFqdnWithTooltip(target.fqdn, target.ip)}</td>
-                        <td>{renderPortService(target.remote_port)}</td>
+                        <td>{target.port}</td>
                         <td>{renderProcessName(target.processName, target.pid)}</td>
+                        <td>{target.fqdn}</td>
+                        <td>{target.ip}</td>
+                        <td>{renderPortService(target.remote_port)}</td>
+                        <td>{target.remote_port}</td>
                         <td>{target.seenCount}</td>
+                        <td className="last-seen-cell">{renderLastSeen(target.lastSeen)}</td>
                       </tr>
                     ))}
                   </tbody>

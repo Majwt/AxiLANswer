@@ -166,6 +166,40 @@
   vertical-align: middle;
 }
 
+.details-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in oklab, var(--bg) 92%, var(--surface-control-strong) 8%);
+  backdrop-filter: blur(1px);
+}
+
+.details-table thead tr {
+  box-shadow: 0 1px 0 0 var(--border);
+}
+
+.last-seen-cell {
+  white-space: nowrap;
+}
+
+.last-seen-chip {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--primary-border) 75%, var(--border) 25%);
+  background: color-mix(in oklab, var(--primary-bg) 78%, transparent);
+  color: color-mix(in oklab, var(--text-h) 86%, var(--primary) 14%);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  padding: 0.12rem 0.45rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.last-seen-chip.invalid {
+  border-color: color-mix(in oklab, var(--accent-border) 60%, var(--border) 40%);
+  background: color-mix(in oklab, var(--accent-bg) 70%, transparent);
+  color: color-mix(in oklab, var(--text-h) 85%, var(--accent) 15%);
+}
+
 /* highlight row on hover */
 .details-table tbody tr:hover {
   background: color-mix(in oklab, var(--border) 30%, transparent);
