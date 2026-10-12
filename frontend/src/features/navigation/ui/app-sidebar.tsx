@@ -1,4 +1,4 @@
-import { LayoutDashboard, Network } from "lucide-react";
+import { LayoutDashboard, Network, Puzzle, RotateCw } from "lucide-react";
 
 import {
   Sidebar,
@@ -11,14 +11,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink, useLocation, useParams } from "react-router";
 import SidebarCustomerSelect from "./sidebar-customer-select";
 import { NavUser } from "@/components/nav-user";
+import { usePlugins } from "@/features/plugins/plugin-context";
+import { pluginPagePath } from "@/features/plugins/manifest";
 
 export function AppSidebar() {
   const { customerId } = useParams();
   const location = useLocation();
+  const { plugins, status, retry } = usePlugins();
+  const { isMobile, setOpenMobile } = useSidebar();
   const dashboardPath = customerId ? `/customer/${customerId}/dashboard` : "/dashboard";
   const graphPath = customerId ? `/customer/${customerId}/graph` : "/graph";
 
@@ -60,6 +65,40 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {status === "error" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Plugins unavailable</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={retry}><RotateCw /><span>Retry</span></SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {plugins.map((plugin) => (
+          <SidebarGroup key={plugin.id}>
+            <SidebarGroupLabel title={plugin.name}><span className="truncate">{plugin.name}</span></SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {plugin.pages.map((page) => {
+                  const path = pluginPagePath(plugin.id, page.id, customerId);
+                  return (
+                    <SidebarMenuItem key={page.id}>
+                      <SidebarMenuButton asChild isActive={location.pathname === path}>
+                        <NavLink to={path} title={page.title} onClick={() => { if (isMobile) setOpenMobile(false); }}>
+                          <Puzzle />
+                          <span>{page.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
         <SidebarGroup className="">
           <SidebarGroupLabel>Other</SidebarGroupLabel>
           <SidebarGroupContent>

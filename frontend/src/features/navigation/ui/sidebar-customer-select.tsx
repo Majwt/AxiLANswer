@@ -13,6 +13,7 @@ import { fetchAllCustomers, fetchCurrentCustomer } from "@/api/customer-api";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { Building2, Check, ChevronsUpDown, Network } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
+import { pluginPagePath } from "@/features/plugins/manifest";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   SidebarMenu,
@@ -23,7 +24,7 @@ import {
 
 function SidebarCustomerSelect() {
   const { role, customerId: authenticatedCustomerId } = useAuth();
-  const { customerId: routeCustomerId } = useParams();
+  const { customerId: routeCustomerId, pluginId, pageId } = useParams();
   const { isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +54,10 @@ function SidebarCustomerSelect() {
   const selectCustomer = (customerId: number | null) => {
     setOpen(false);
     if (isMobile) setOpenMobile(false);
+    if (pluginId && pageId) {
+      navigate(pluginPagePath(pluginId, pageId, customerId == null ? undefined : String(customerId)));
+      return;
+    }
     navigate(customerId == null ? `/${page}` : `/customer/${customerId}/${page}`);
   };
 
