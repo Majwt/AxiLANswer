@@ -10,6 +10,8 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "preview:tables:api": "node scripts/table-preview.mjs",
+    "test:table-preview": "node --test scripts/table-preview.test.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

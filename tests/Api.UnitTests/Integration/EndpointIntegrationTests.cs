@@ -1,11 +1,39 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using Xunit;
 
 namespace Api.UnitTests.Integration;
 
 public sealed class EndpointIntegrationTests : IClassFixture<ApiWebApplicationFactory>
 {
+    [Theory]
+    [InlineData("/api/gui/tables", false)]
+    [InlineData("/api/gui/tables/dbo/servers/query", true)]
+    [InlineData("/api/gui/tables/dbo/servers/write", true)]
+    [InlineData("/api/gui/tables/dbo/servers/metadata", false)]
+    public async Task GuiEndpoints_RequireAdmin(string path, bool post)
+    {
+        using var client = CreateHttpsClient();
+        var anonymous = post ? await client.PostAsJsonAsync(path, new { }) : await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "customer-7");
+        var customer = post ? await client.PostAsJsonAsync(path, new { }) : await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Forbidden, customer.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(0, 100)]
+    [InlineData(1, 0)]
+    [InlineData(1, 501)]
+    public async Task GuiQuery_InvalidPaging_ReturnsBadRequest(int page, int pageSize)
+    {
+        using var client = CreateHttpsClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "admin");
+        var response = await client.PostAsJsonAsync("/api/gui/tables/dbo/servers/query", new { page, page_size = pageSize });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private readonly ApiWebApplicationFactory _factory;
 
     public EndpointIntegrationTests(ApiWebApplicationFactory factory)

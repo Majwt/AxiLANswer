@@ -57,3 +57,17 @@ export async function apiGetText<T>(path: string): Promise<T> {
   if (!response.ok) throw new Error(`GET ${path} failed with status ${response.status}`);
   return response.text() as Promise<T>;
 }
+
+export async function apiPost<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
+  const response = await apiFetch(path, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok) {
+    const detail = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(detail?.error ?? `POST ${path} failed with status ${response.status}`);
+  }
+  return response.json() as Promise<T>;
+}

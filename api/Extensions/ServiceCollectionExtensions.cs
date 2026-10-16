@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IDashboardReadRepository, DashboardReadRepository>();
         services.AddSingleton<ICustomerReadRepository, CustomerReadRepository>();
         services.AddSingleton<IAuthSessionRepository, AuthSessionRepository>();
+        services.AddSingleton<GuiTableRepository>();
         services.AddControllers();
 
         services.AddResponseCompression(options => { options.EnableForHttps = true; });
