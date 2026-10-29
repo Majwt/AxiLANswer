@@ -58,13 +58,33 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router"],
-          "vendor-graph": ["graphology", "@react-sigma/core", "@sigma/edge-curve"],
-          "vendor-d3": ["d3"],
-          "vendor-charts": ["recharts"],
-          "vendor-auth": ["oidc-client-ts", "react-oidc-context"],
-          "vendor-ui": ["radix-ui", "lucide-react", "sonner", "vaul", "cmdk"],
+        // Vite 8 (Rolldown) dropped the object form of manualChunks and requires
+        // a function (moduleId, meta) => string | null. The moduleId is a resolved
+        // path like "node_modules/react/index.js" (or "node_modules/@scope/pkg/..."),
+        // so we extract the top-level package name and match it against the same
+        // six vendor groups the old object form produced.
+        manualChunks: (moduleId) => {
+          const vendorChunks: Record<string, string[]> = {
+            "vendor-react": ["react", "react-dom", "react-router"],
+            "vendor-graph": ["graphology", "@react-sigma/core", "@sigma/edge-curve"],
+            "vendor-d3": ["d3"],
+            "vendor-charts": ["recharts"],
+            "vendor-auth": ["oidc-client-ts", "react-oidc-context"],
+            "vendor-ui": ["radix-ui", "lucide-react", "sonner", "vaul", "cmdk"],
+          };
+          const parts = moduleId.split("/");
+          const idx = parts.lastIndexOf("node_modules");
+          if (idx === -1 || idx + 1 >= parts.length) return null;
+          let pkg = parts[idx + 1];
+          if (pkg.startsWith("@")) {
+            const name = parts[idx + 2];
+            if (!name) return null;
+            pkg = `${pkg}/${name}`;
+          }
+          for (const [chunk, deps] of Object.entries(vendorChunks)) {
+            if (deps.includes(pkg)) return chunk;
+          }
+          return null;
         },
       },
     },
