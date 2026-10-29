@@ -16,28 +16,61 @@ namespace Api.UnitTests.Integration;
 
 public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly bool _networkEnabled;
+
+    public ApiWebApplicationFactory()
+        : this(networkEnabled: true)
+    {
+    }
+
+    internal ApiWebApplicationFactory(bool networkEnabled)
+    {
+        _networkEnabled = networkEnabled;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.UseSetting("Modules:Network:Enabled", _networkEnabled.ToString());
 
         builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
             var testConfig = new Dictionary<string, string?>
             {
                 ["AllowedHosts"] = "*",
-                ["ConnectionStrings:Default"] = "Server=127.0.0.1,1433;Database=axilanswer_test;User Id=test;Password=test;TrustServerCertificate=True;",
-                ["Database:EdgeTable"] = "dbo.connection_edge",
-                ["Database:EdgeStatsView"] = "dbo.v_connection_stats",
-                ["Database:NodeTable"] = "dbo.managed_node",
-                ["Database:InterfaceTable"] = "dbo.node_interface",
-                ["Database:PortsTable"] = "dbo.ports",
-                ["Database:SeenCountThreshold"] = "0",
+                ["Modules:Network:Enabled"] = _networkEnabled.ToString(),
+                ["ConnectionStrings:Auth"] = "Server=127.0.0.1,1433;Database=axiauth_test;User Id=test;Password=test;TrustServerCertificate=True;",
+                ["ConnectionStrings:GuiTables"] = "Server=127.0.0.1,1433;Database=axiatables_test;User Id=test;Password=test;TrustServerCertificate=True;",
                 ["Jwt:SigningKey"] = "0123456789abcdef0123456789abcdef",
                 ["Jwt:Issuer"] = "axilanswer-tests",
                 ["Jwt:Audience"] = "axilanswer-client",
                 ["Jwt:AccessTokenMinutes"] = "30",
                 ["Jwt:RefreshTokenDays"] = "7",
+                ["Auth:Users:0:Username"] = "test-admin",
+                ["Auth:Users:0:Password"] = "test-password",
+                ["Auth:Users:0:Role"] = "Admin",
             };
+
+            if (_networkEnabled)
+            {
+                testConfig["ConnectionStrings:Default"] = "Server=127.0.0.1,1433;Database=axilanswer_test;User Id=test;Password=test;TrustServerCertificate=True;";
+                testConfig["Database:EdgeTable"] = "dbo.connection_edge";
+                testConfig["Database:EdgeStatsView"] = "dbo.v_connection_stats";
+                testConfig["Database:NodeTable"] = "dbo.managed_node";
+                testConfig["Database:InterfaceTable"] = "dbo.node_interface";
+                testConfig["Database:PortsTable"] = "dbo.ports";
+                testConfig["Database:SeenCountThreshold"] = "0";
+            }
+            else
+            {
+                testConfig["ConnectionStrings:Default"] = null;
+                testConfig["Database:EdgeTable"] = null;
+                testConfig["Database:EdgeStatsView"] = null;
+                testConfig["Database:NodeTable"] = null;
+                testConfig["Database:InterfaceTable"] = null;
+                testConfig["Database:PortsTable"] = null;
+                testConfig["Database:SeenCountThreshold"] = null;
+            }
 
             configBuilder.AddInMemoryCollection(testConfig);
         });
@@ -209,6 +242,18 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
     private sealed class FakeDashboardReadRepository : IDashboardReadRepository
     {
+        public Task<DashboardMetric> GetDistinctEdgesAsync(int lastDays, int customerId = -1)
+            => Task.FromResult(new DashboardMetric("Distinct Connections", 100, "Unique source to destination paths", "Deduplicated edges"));
+
+        public Task<DashboardMetric> GetActiveNodesAsync(int lastDays, int customerId = -1)
+            => Task.FromResult(new DashboardMetric("Active Nodes", 25, "Recently active nodes", "Nodes seen in the selected period"));
+
+        public Task<DashboardMetric> GetTotalEventsAsync(int lastDays, int customerId = -1)
+            => Task.FromResult(new DashboardMetric("Total events", 1000, "Cumulative traffic reports", "Across all active edges"));
+
+        public Task<DashboardMetric> GetNewConnectionsAsync(int lastDays, int customerId = -1)
+            => Task.FromResult(new DashboardMetric("New Connections", 10, "Recently observed connections", "Connections first seen in the selected period"));
+
         public Task<DashboardStats> GetDashboardStatsAsync(int customerId = -1)
         {
             var stats = customerId == -1
@@ -232,8 +277,18 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
         public Task<IEnumerable<NodeRow>> GetDashboardNodesAsync(int limit, int customerId = -1)
             => Task.FromResult<IEnumerable<NodeRow>>(new[]
             {
-                new NodeRow("ci-001", "node-a.local", "node-a", 1, 2, DateTime.UnixEpoch, DateTime.UnixEpoch, "group-a")
+                new NodeRow("ci-001", "node-a.local", "node-a", "Linux", "MrBig", "1.0", 1, 2, DateTime.UnixEpoch, DateTime.UnixEpoch, "group-a")
             });
+
+        public Task<PagedResult<NodeRow>> GetDashboardNodesPageAsync(int page, int pageSize, string? query, int customerId = -1)
+            => Task.FromResult(new PagedResult<NodeRow>(
+                new[]
+                {
+                    new NodeRow("ci-001", "node-a.local", "node-a", "Linux", "MrBig", "1.0", 1, 2, DateTime.UnixEpoch, DateTime.UnixEpoch, "group-a")
+                },
+                TotalCount: 1,
+                Page: page,
+                PageSize: pageSize));
     }
 
     private sealed class FakeCustomerReadRepository : ICustomerReadRepository

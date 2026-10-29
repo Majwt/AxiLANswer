@@ -8,7 +8,8 @@ public class AuthSessionRepository : IAuthSessionRepository
 
     public AuthSessionRepository(IConfiguration configuration)
     {
-        _connectionString = configuration.GetConnectionString(Config.CONNECTION_STRING_NAME)
+        _connectionString = configuration.GetConnectionString("Auth")
+            ?? configuration.GetConnectionString(Config.CONNECTION_STRING_NAME)
             ?? throw new InvalidOperationException("Missing connection string.");
     }
 

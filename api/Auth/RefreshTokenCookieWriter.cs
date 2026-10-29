@@ -4,7 +4,7 @@ public static class RefreshTokenCookieWriter
 {
     public static void SetRefreshCookie(HttpContext context, string rawToken, int days)
     {
-        context.Response.Cookies.Append("axilanswer_rt", rawToken, new CookieOptions
+        context.Response.Cookies.Append("axianswer_rt", rawToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = true,

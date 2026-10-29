@@ -1,4 +1,4 @@
-import { LayoutDashboard, Network, Puzzle, RotateCw } from "lucide-react";
+import { House, Puzzle, RotateCw } from "lucide-react";
 
 import {
   Sidebar,
@@ -17,48 +17,35 @@ import { NavLink, useLocation, useParams } from "react-router";
 import SidebarCustomerSelect from "./sidebar-customer-select";
 import { NavUser } from "@/components/nav-user";
 import { usePlugins } from "@/features/plugins/plugin-context";
-import { pluginPagePath } from "@/features/plugins/manifest";
+import { canUseCustomerContext, pluginPagePath } from "@/features/plugins/manifest";
 
 export function AppSidebar() {
-  const { customerId } = useParams();
+  const { customerId, pluginId, pageId } = useParams();
   const location = useLocation();
   const { plugins, status, retry } = usePlugins();
   const { isMobile, setOpenMobile } = useSidebar();
-  const dashboardPath = customerId ? `/customer/${customerId}/dashboard` : "/dashboard";
-  const graphPath = customerId ? `/customer/${customerId}/graph` : "/graph";
+  const showCustomerSelect = canUseCustomerContext(plugins, pluginId, pageId);
 
   return (
     <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader>
-        <SidebarCustomerSelect />
+        {showCustomerSelect && <SidebarCustomerSelect />}
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>AxiLANswer</SidebarGroupLabel>
+          <SidebarGroupLabel>AxiAnswer</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={location.pathname === "/" || location.pathname === dashboardPath}
+                  isActive={location.pathname === "/"}
                   className="data-[active=true]:bg-primary/12 data-[active=true]:text-primary"
                 >
-                  <NavLink to={dashboardPath}>
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname === graphPath}
-                  className="data-[active=true]:bg-primary/12 data-[active=true]:text-primary"
-                >
-                  <NavLink to={graphPath}>
-                    <Network />
-                    <span>Graph</span>
+                  <NavLink to="/">
+                    <House />
+                    <span>Home</span>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -83,12 +70,13 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {plugin.pages.map((page) => {
-                  const path = pluginPagePath(plugin.id, page.id, customerId);
+                  const path = pluginPagePath(plugin.id, page.id, page.customerScope ? customerId : undefined);
+                  const PageIcon = page.icon ?? Puzzle;
                   return (
                     <SidebarMenuItem key={page.id}>
                       <SidebarMenuButton asChild isActive={location.pathname === path}>
                         <NavLink to={path} title={page.title} onClick={() => { if (isMobile) setOpenMobile(false); }}>
-                          <Puzzle />
+                          <PageIcon />
                           <span>{page.title}</span>
                         </NavLink>
                       </SidebarMenuButton>

@@ -43,7 +43,7 @@ export default function LoginPage() {
       <section className="w-full max-w-md rounded-xl border bg-background p-6 shadow-sm">
         <div className="mb-6 flex items-center gap-2">
           <img src="/favicon.svg" alt="Logo" className="h-7 w-7" />
-          <p className="font-heading text-lg font-semibold">AxiLANswer</p>
+          <p className="font-heading text-lg font-semibold">AxiAnswer</p>
         </div>
 
         <div className="mb-4 space-y-1">

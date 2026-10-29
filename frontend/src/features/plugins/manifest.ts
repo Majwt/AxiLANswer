@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PluginPageDefinition, PluginRole } from "./plugin-types";
+import type { InstalledPlugin, PluginPageDefinition, PluginRole } from "./plugin-types";
 
 const identifier = z.string().regex(/^[a-z][a-z0-9-]*$/).max(64);
 
@@ -27,4 +27,29 @@ export function canAccessPluginPage(page: PluginPageDefinition, role: string | n
 export function pluginPagePath(pluginId: string, pageId: string, customerId?: string) {
   const path = `/plugins/${pluginId}/${pageId}`;
   return customerId ? `/customer/${encodeURIComponent(customerId)}${path}` : path;
+}
+
+export function canUseCustomerContext(
+  plugins: InstalledPlugin[],
+  pluginId: string | undefined,
+  pageId: string | undefined,
+) {
+  if (!plugins.some((plugin) => plugin.id === "network")) {
+    return false;
+  }
+
+  if (!pluginId) {
+    return true;
+  }
+
+  const page = plugins
+    .find((plugin) => plugin.id === pluginId)
+    ?.pages.find((entry) => entry.id === pageId);
+  return page?.customerScope === true;
+}
+
+export function applyModuleAvailability(enabledPluginIds: string[], networkEnabled: boolean) {
+  return networkEnabled
+    ? enabledPluginIds
+    : enabledPluginIds.filter((pluginId) => pluginId !== "network");
 }

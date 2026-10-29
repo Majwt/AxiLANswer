@@ -79,7 +79,7 @@ export default function SettingsPage() {
               <Button onClick={downloadManifest} disabled={!hasChanges}>
                 <Download data-icon="inline-start" />Download plugins.json
               </Button>
-              <p className="text-sm text-muted-foreground">{hasChanges ? "Publish this file, then refresh AxiLANswer." : "Toggle a plugin to prepare an updated manifest."}</p>
+              <p className="text-sm text-muted-foreground">{hasChanges ? "Publish this file, then refresh AxiAnswer." : "Toggle a plugin to prepare an updated manifest."}</p>
             </div>
           )}
         </CardContent>
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Install or create a plugin</CardTitle>
-          <CardDescription>Plugins are trusted React modules rendered inside the AxiLANswer application.</CardDescription>
+          <CardDescription>Plugins are trusted React modules rendered inside the AxiAnswer application.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 text-sm">
           <ol className="list-decimal pl-5">

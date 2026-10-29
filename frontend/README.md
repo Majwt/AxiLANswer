@@ -1,4 +1,4 @@
-# AxiLANswer Frontend
+# AxiAnswer Frontend
 
 The frontend uses React, TypeScript, Vite, and shadcn/ui.
 
@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 
 ## Frontend Plugins
 
-Plugins are trusted React modules bundled into the AxiLANswer frontend. Their
+Plugins are trusted React modules bundled into the AxiAnswer frontend. Their
 pages render directly inside the authenticated application shell, sharing its
 React runtime, routing, theme, and UI components. A plugin may call its own
 backend, but a separate backend is optional.
@@ -84,7 +84,7 @@ pages. Switching customers preserves the current plugin page.
   manifest cannot install code that is not in that build.
 2. Sign in as an admin and enable the module in **Settings**.
 3. Download the updated `plugins.json` and publish it to the frontend static
-  root. Refresh AxiLANswer to load the new configuration.
+  root. Refresh AxiAnswer to load the new configuration.
 
 The settings manifest only enables bundled modules; it does not download or
 execute remote code. The configuration format is:
@@ -108,7 +108,7 @@ security boundaries.
 ### Optional Backend
 
 A plugin can call an independently deployed backend with `fetch` or a shared
-frontend API client. For a cross-origin API, configure CORS for the AxiLANswer
+frontend API client. For a cross-origin API, configure CORS for the AxiAnswer
 origin. Implement authentication, authorization, and tenant checks in the
 backend. If sending a host access token, the backend must be configured to
 validate that token and its audience. Never treat the page's `role` or
@@ -128,7 +128,7 @@ every request.
 
 The bundled `axianswer-table` plugin uses only stored procedures for data access.
 A DBA must run `../db/manual/axianswer_table_procedures.sql` in the AxiAnswer
-source database, not the AxiLANswer managed-node database. The script imports
+source database, not the network managed-node database. The script imports
 the table list from Gui-sp's `dbo.sp_GuiTablesGet` when installed, or applies
 the same discovery exclusions when it is absent. It registers tables with a
 visible, non-null unique single-column key, preferring the primary key, and

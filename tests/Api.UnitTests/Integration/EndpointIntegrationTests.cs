@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Api.UnitTests.Integration;
@@ -208,6 +211,36 @@ public sealed class EndpointIntegrationTests : IClassFixture<ApiWebApplicationFa
     }
 
     [Fact]
+    public async Task AuthLogin_UsesAxiAnswerRefreshCookie()
+    {
+        using var client = CreateHttpsClient();
+
+        var response = await client.PostAsJsonAsync("/api/auth/login", new
+        {
+            username = "test-admin",
+            password = "test-password",
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        Assert.Contains(cookies!, cookie => cookie.StartsWith("axianswer_rt=", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task AuthRefresh_WithLegacyCookie_RejectsAndExpiresIt()
+    {
+        using var client = CreateHttpsClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request.Headers.TryAddWithoutValidation("Cookie", "axilanswer_rt=legacy-token");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        Assert.Contains(cookies!, cookie => cookie.StartsWith("axilanswer_rt=", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
     public async Task AuthLogout_WithToken_ReturnsOk()
     {
         using var client = CreateHttpsClient();
@@ -217,6 +250,37 @@ public sealed class EndpointIntegrationTests : IClassFixture<ApiWebApplicationFa
         var response = await client.PostAsync("/api/auth/logout", content: null);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NetworkDisabled_StartsWithoutNetworkConfiguration()
+    {
+        using var factory = new ApiWebApplicationFactory(networkEnabled: false);
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+        });
+        var configuration = factory.Services.GetRequiredService<IConfiguration>();
+
+        Assert.Null(configuration.GetConnectionString("Default"));
+        Assert.Null(configuration["Database:EdgeTable"]);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/healthz")).StatusCode);
+        var authConfigResponse = await client.GetAsync("/api/auth/config");
+        Assert.Equal(HttpStatusCode.OK, authConfigResponse.StatusCode);
+        using var authConfig = JsonDocument.Parse(await authConfigResponse.Content.ReadAsStringAsync());
+        Assert.False(authConfig.RootElement.GetProperty("network_enabled").GetBoolean());
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/graph")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/dashboard/stats")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/customers")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/gui/tables")).StatusCode);
+
+        var login = await client.PostAsJsonAsync("/api/auth/login", new
+        {
+            username = "test-admin",
+            password = "test-password",
+        });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
     }
 
     private HttpClient CreateHttpsClient()

@@ -26,7 +26,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
   }
 
   if (role !== "Admin") {
-    return <Navigate to="/graph" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

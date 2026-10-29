@@ -1,4 +1,5 @@
 using Api.Auth;
+using Api.Extensions;
 using Api.Models;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using System.Globalization;
 namespace Api.Controllers;
 
 [ApiController]
+[NetworkModule]
 public class GraphController(ILogger<GraphController> logger) : ControllerBase
 {
     [HttpGet("api/graph")]

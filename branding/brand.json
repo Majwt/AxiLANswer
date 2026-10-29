@@ -1,7 +1,7 @@
 {
-  "name": "AxiLANswer",
-  "shortName": "AxiLANswer",
-  "description": "Network connection visualization tool",
+  "name": "AxiAnswer",
+  "shortName": "AxiAnswer",
+  "description": "A modular workspace for infrastructure tools",
   "colors": {
     "themeColor": "#5fa9e6",
     "accentColor": "#ff4ea9",

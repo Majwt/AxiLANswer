@@ -28,6 +28,7 @@ public class AuthController : ControllerBase
             oidc_authority = authority ?? "",
             oidc_client_id = config["Oidc:ClientId"] ?? "",
             oidc_scope = "openid profile",
+            network_enabled = config.GetValue("Modules:Network:Enabled", true),
         });
     }
 
@@ -211,7 +212,8 @@ public class AuthController : ControllerBase
         [FromServices] IAuthSessionRepository authSessionRepository,
         [FromServices] TokenService tokenService)
     {
-        var rawToken = HttpContext.Request.Cookies["axilanswer_rt"];
+        HttpContext.Response.Cookies.Delete("axilanswer_rt", new CookieOptions { Path = "/api/auth" });
+        var rawToken = HttpContext.Request.Cookies["axianswer_rt"];
         if (string.IsNullOrEmpty(rawToken))
         {
             return Results.Unauthorized();
@@ -226,7 +228,7 @@ public class AuthController : ControllerBase
         var (session, compromised) = result.Value;
         if (compromised)
         {
-            HttpContext.Response.Cookies.Delete("axilanswer_rt", new CookieOptions { Path = "/api/auth" });
+            HttpContext.Response.Cookies.Delete("axianswer_rt", new CookieOptions { Path = "/api/auth" });
             return Results.Unauthorized();
         }
 
@@ -260,6 +262,7 @@ public class AuthController : ControllerBase
             await authSessionRepository.RevokeSessionAsync(sessionId, "logout");
         }
 
+        HttpContext.Response.Cookies.Delete("axianswer_rt", new CookieOptions { Path = "/api/auth" });
         HttpContext.Response.Cookies.Delete("axilanswer_rt", new CookieOptions { Path = "/api/auth" });
         return Results.Ok();
     }

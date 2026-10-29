@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/sidebar"
 import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react"
 import { useAuth } from "@/auth/AuthContext"
-import { useGraphStats } from "@/features/graph/graph-stats-context"
 import { useNavigate } from "react-router"
 
 function initials(name: string | null): string {
@@ -32,18 +31,9 @@ function initials(name: string | null): string {
 
 export function NavUser() {
   const { name, email, picture, role, logout } = useAuth()
-  const { lastConnectionUtc } = useGraphStats()
   const navigate = useNavigate()
   const { isMobile } = useSidebar()
   const appVersion = import.meta.env.VITE_APP_VERSION ?? "dev"
-  const lastFetchText = lastConnectionUtc
-    ? new Date(lastConnectionUtc).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "No data yet"
 
   function handleLogout() {
     logout()
@@ -106,9 +96,6 @@ export function NavUser() {
         <div className="space-y-0.5 text-[11px] text-muted-foreground">
           <p>
             Version: <span className="font-mono">{appVersion}</span>
-          </p>
-          <p>
-            Last fetch: <span className="font-medium">{lastFetchText}</span>
           </p>
         </div>
       </SidebarMenuItem>

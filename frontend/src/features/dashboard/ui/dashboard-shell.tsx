@@ -1,31 +1,19 @@
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/features/dashboard/ui/dashboard-data-table";
 import { SectionCards } from "@/components/section-cards";
-import { useGraphStats } from "@/features/graph/graph-stats-context";
 import { useDashboardData } from "@/features/dashboard/hooks/use-dashboard-data";
-import { Activity, Clock3 } from "lucide-react";
+import { Activity } from "lucide-react";
 import { Navigate, useParams } from "react-router";
 
 export function DashboardShell() {
   const { customerId: customerIdParam } = useParams();
   const customerId = customerIdParam == null ? null : Number(customerIdParam);
   const isValidCustomerId = customerId == null || (Number.isInteger(customerId) && customerId > 0);
-  const { lastConnectionUtc } = useGraphStats();
   const { cards, cardsLoading, chartData, loading } = useDashboardData(customerId, isValidCustomerId);
 
   if (!isValidCustomerId) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  const lastSeenText = lastConnectionUtc
-    ? new Date(lastConnectionUtc).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "No graph sample loaded yet";
 
   return (
     <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-scroll [scrollbar-gutter:stable] @container/main">
@@ -44,10 +32,6 @@ export function DashboardShell() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/70 px-3 py-2 text-xs text-muted-foreground">
-            <Clock3 className="h-3.5 w-3.5" />
-            Last graph cursor: {lastSeenText}
-          </div>
         </section>
 
         <SectionCards cards={cards} loading={cardsLoading} />

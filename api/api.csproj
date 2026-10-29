@@ -15,9 +15,9 @@
     <FileVersion>0.1.0.0</FileVersion>
 
     <!-- Windows file properties -->
-    <Title>AxiLANswer API</Title>
-    <Product>AxiLANswer</Product>
-    <Description>Backend API for AxiLANswer network visualization</Description>
+    <Title>AxiAnswer API</Title>
+    <Product>AxiAnswer</Product>
+    <Description>Backend API for AxiAnswer infrastructure tools</Description>
     <Company>Axians</Company>
     <Authors>Theodor Wase and Walter Almgren</Authors>
 

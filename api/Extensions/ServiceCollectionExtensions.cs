@@ -42,18 +42,16 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddApiCore(this IServiceCollection services)
+    public static IServiceCollection AddApiCore(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<GraphService>();
-        services.AddScoped<CustomerService>();
-        services.AddScoped<DashboardService>();
         services.AddScoped<TokenService>();
-        services.AddSingleton<IGraphReadRepository, GraphReadRepository>();
-        services.AddSingleton<IDashboardReadRepository, DashboardReadRepository>();
-        services.AddSingleton<ICustomerReadRepository, CustomerReadRepository>();
         services.AddSingleton<IAuthSessionRepository, AuthSessionRepository>();
         services.AddSingleton<GuiTableRepository>();
-        services.AddControllers();
+        services.AddControllers(options =>
+        {
+            options.Conventions.Add(new NetworkModuleControllerConvention(
+                configuration.GetValue("Modules:Network:Enabled", true)));
+        });
 
         services.AddResponseCompression(options => { options.EnableForHttps = true; });
         services.AddHealthChecks();
@@ -61,6 +59,25 @@ public static class ServiceCollectionExtensions
         services.AddMemoryCache();
         services.AddEndpointsApiExplorer();
 
+        return services;
+    }
+
+    public static IServiceCollection AddNetworkModule(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        if (!configuration.GetValue("Modules:Network:Enabled", true))
+        {
+            return services;
+        }
+
+        services.AddDatabaseOptions(configuration);
+        services.AddScoped<GraphService>();
+        services.AddScoped<CustomerService>();
+        services.AddScoped<DashboardService>();
+        services.AddSingleton<IGraphReadRepository, GraphReadRepository>();
+        services.AddSingleton<IDashboardReadRepository, DashboardReadRepository>();
+        services.AddSingleton<ICustomerReadRepository, CustomerReadRepository>();
         return services;
     }
 

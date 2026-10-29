@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import type { LucideIcon } from "lucide-react";
 
 export type PluginRole = "Admin" | "Customer";
 
@@ -11,6 +12,8 @@ export type PluginPageDefinition = {
   id: string;
   title: string;
   component: ComponentType<PluginPageProps>;
+  icon?: LucideIcon;
+  customerScope?: boolean;
   roles?: PluginRole[];
 };
 

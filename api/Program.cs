@@ -2,12 +2,10 @@ using Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddEnvironmentVariables();
-
 builder.Services
     .AddApiJson()
-    .AddDatabaseOptions(builder.Configuration)
-    .AddApiCore()
+    .AddApiCore(builder.Configuration)
+    .AddNetworkModule(builder.Configuration)
     .AddApiAuthentication(builder.Configuration);
 
 builder.Logging.ClearProviders();

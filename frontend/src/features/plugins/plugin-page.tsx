@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RotateCw } from "lucide-react";
 import { useParams } from "react-router";
 import { useAuth } from "@/auth/AuthContext";
@@ -25,7 +26,7 @@ export function PluginPage() {
     );
   }
 
-  if (!page || !plugin) {
+  if (!page || !plugin || (routeCustomerId != null && !page.customerScope)) {
     return (
       <section className="flex flex-col gap-2 p-6">
         <h1 className="text-lg font-semibold">Plugin page unavailable</h1>
@@ -47,7 +48,9 @@ export function PluginPage() {
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-auto">
-        <PageComponent customerId={selectedCustomerId != null && Number.isFinite(selectedCustomerId) ? selectedCustomerId : null} role={role === "Admin" ? "Admin" : "Customer"} />
+        <Suspense fallback={<p role="status" className="p-6 text-sm text-muted-foreground">Loading {page.title}...</p>}>
+          <PageComponent customerId={selectedCustomerId != null && Number.isFinite(selectedCustomerId) ? selectedCustomerId : null} role={role === "Admin" ? "Admin" : "Customer"} />
+        </Suspense>
       </div>
     </section>
   );

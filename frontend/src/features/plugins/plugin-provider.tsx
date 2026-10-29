@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/auth/AuthContext";
-import { canAccessPluginPage, parsePluginManifest } from "./manifest";
+import { applyModuleAvailability, canAccessPluginPage, parsePluginManifest } from "./manifest";
 import { PluginContext, type PluginRegistry } from "./plugin-context";
 import { pluginDefinitions } from "./plugin-registry";
 
@@ -21,7 +21,9 @@ export function PluginProvider({ children }: { children: ReactNode }) {
         return parsePluginManifest(await response.json());
       })
       .then((manifest) => {
-        if (!controller.signal.aborted) setState({ enabledPluginIds: manifest.enabledPluginIds, status: "ready" });
+        const networkEnabled = window.__APP_CONFIG__?.NETWORK_ENABLED !== "false";
+        const enabledPluginIds = applyModuleAvailability(manifest.enabledPluginIds, networkEnabled);
+        if (!controller.signal.aborted) setState({ enabledPluginIds, status: "ready" });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;

@@ -16,7 +16,7 @@ export interface AuthContextValue {
   logout: () => void;
 }
 
-const STORAGE_KEY = "axilanswer_token";
+const STORAGE_KEY = "axianswer_token";
 
 let _tokenRef: string | null = null;
 

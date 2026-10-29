@@ -1,4 +1,4 @@
 {
   "schemaVersion": 1,
-  "enabledPluginIds": ["axianswer-table"]
+  "enabledPluginIds": ["network", "axianswer-table"]
 }

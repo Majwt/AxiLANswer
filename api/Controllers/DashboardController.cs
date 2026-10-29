@@ -1,4 +1,5 @@
 using Api.Auth;
+using Api.Extensions;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [ApiController]
+[NetworkModule]
 [Route("api/dashboard")]
 [Authorize]
 public class DashboardController : ControllerBase
